@@ -13,7 +13,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "스마트 도소매 플랫폼",
   description: "해외 상품 분석 및 구매 대행 서비스",
-    generator: 'v0.dev'
+    generator: 'smart-whlesale.dev'
 }
 
 export default function RootLayout({
