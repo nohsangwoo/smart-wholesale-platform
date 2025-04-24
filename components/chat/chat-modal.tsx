@@ -135,7 +135,7 @@ export function ChatModal({ isOpen, onClose, vendorId, vendorName, vendorAvatar 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 md:p-0">
+    <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 md:p-0">
       <div className="bg-background rounded-lg shadow-lg w-full max-w-md h-[600px] max-h-[90vh] flex flex-col">
         {/* 채팅 헤더 */}
         <div className="p-4 border-b flex items-center justify-between">

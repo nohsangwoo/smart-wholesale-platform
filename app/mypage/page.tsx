@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { User, Phone, Mail, MapPin } from "lucide-react"
+import { User, Phone, Mail, MapPin, FileText, ShoppingBag, Heart, Share2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/context/auth-context"
@@ -77,12 +77,53 @@ export default function MyPage() {
             </CardContent>
           </Card>
 
-          <div className="flex gap-4">
-            <Button variant="outline" className="flex-1" onClick={() => router.push("/mypage/orders")}>
-              내 주문 내역
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Button
+              variant="outline"
+              className="flex items-center justify-center gap-2 h-auto py-6"
+              onClick={() => router.push("/mypage/orders")}
+            >
+              <ShoppingBag className="h-5 w-5" />
+              <div className="text-left">
+                <div className="font-medium">주문 내역</div>
+                <div className="text-sm text-muted-foreground">구매한 상품 내역 확인</div>
+              </div>
             </Button>
-            <Button variant="outline" className="flex-1" onClick={() => router.push("/mypage/settings")}>
-              설정
+
+            <Button
+              variant="outline"
+              className="flex items-center justify-center gap-2 h-auto py-6"
+              onClick={() => router.push("/mypage/quotes")}
+            >
+              <FileText className="h-5 w-5" />
+              <div className="text-left">
+                <div className="font-medium">견적 요청 내역</div>
+                <div className="text-sm text-muted-foreground">진행 중인 견적 요청 확인</div>
+              </div>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="flex items-center justify-center gap-2 h-auto py-6"
+              onClick={() => router.push("/mypage/wishlist")}
+            >
+              <Heart className="h-5 w-5" />
+              <div className="text-left">
+                <div className="font-medium">관심 상품</div>
+                <div className="text-sm text-muted-foreground">찜한 상품 목록 확인</div>
+              </div>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="flex items-center justify-center gap-2 h-auto py-6"
+              onClick={() => router.push("/mypage/shared")}
+            >
+              <Share2 className="h-5 w-5" />
+              <div className="text-left">
+                <div className="font-medium">공유 내역</div>
+                <div className="text-sm text-muted-foreground">공유한 상품 목록 확인</div>
+              </div>
             </Button>
           </div>
         </div>

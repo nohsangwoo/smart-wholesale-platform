@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { User, LogOut, ShoppingBag, Settings, Heart, Share2, MessageSquare } from "lucide-react"
+import { User, LogOut, ShoppingBag, Settings, Heart, Share2, MessageSquare, FileText } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,6 +80,12 @@ export function UserMenu() {
           <DropdownMenuItem asChild>
             <Link href="/mypage/orders" className="cursor-pointer flex w-full">
               <ShoppingBag className="mr-2 h-4 w-4" />내 주문정보
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/mypage/quotes" className="cursor-pointer flex w-full">
+              <FileText className="mr-2 h-4 w-4" />
+              견적 요청 내역
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
