@@ -51,6 +51,12 @@ export async function analyzeProduct(url: string): Promise<ProductData> {
   const tax = Math.round(mockProduct.originalPrice * 0.08)
   const shippingCost = 15000 + Math.round(Math.random() * 10000)
 
+  // Ensure image URL is valid or use placeholder
+  const imageUrl =
+    mockProduct.imageUrl && mockProduct.imageUrl.startsWith("/")
+      ? mockProduct.imageUrl
+      : `/placeholder.svg?height=400&width=400&query=${encodeURIComponent(mockProduct.title || "product")}`
+
   return {
     ...mockProduct,
     platform,
@@ -59,6 +65,7 @@ export async function analyzeProduct(url: string): Promise<ProductData> {
     tax,
     shippingCost,
     originalUrl: decodedUrl,
+    imageUrl, // Use the validated image URL
   }
 }
 

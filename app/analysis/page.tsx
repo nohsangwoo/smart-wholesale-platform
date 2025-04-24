@@ -25,11 +25,18 @@ export default function AnalysisPage() {
       try {
         // 약 2초간 로딩 상태 유지
         setTimeout(async () => {
-          const data = await analyzeProduct(url)
-          setProductData(data)
-          setIsLoading(false)
+          try {
+            const data = await analyzeProduct(url)
+            setProductData(data)
+          } catch (err) {
+            console.error("Error analyzing product:", err)
+            setError("상품 분석 중 오류가 발생했습니다")
+          } finally {
+            setIsLoading(false)
+          }
         }, 2000)
       } catch (err) {
+        console.error("Error in fetchData:", err)
         setError("상품 분석 중 오류가 발생했습니다")
         setIsLoading(false)
       }

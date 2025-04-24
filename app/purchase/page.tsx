@@ -125,15 +125,21 @@ export default function PurchasePage() {
       const data = await response.json()
 
       if (response.ok) {
+        console.log("Order created successfully:", data.order)
+
+        // 디버깅을 위한 로그 추가
+        console.log("Redirecting to waiting page with orderId:", data.order.id)
+
         toast({
-          title: "주문 접수 완료",
-          description: "구매 대행 요청이 접수되었습니다.",
+          title: "구매 대행 요청 접수 완료",
+          description: "전문가들의 견적을 기다려주세요.",
         })
-        router.push(`/purchase/confirmation?orderId=${data.order.id}`)
+        router.push(`/purchase/waiting?orderId=${data.order.id}`)
       } else {
         throw new Error(data.message || "주문 처리 중 오류가 발생했습니다.")
       }
     } catch (error) {
+      console.error("Error submitting order:", error)
       toast({
         title: "오류 발생",
         description: "주문 처리 중 문제가 발생했습니다. 다시 시도해주세요.",
@@ -259,7 +265,7 @@ export default function PurchasePage() {
 
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle>결제 정보</CardTitle>
+                <CardTitle>상품 분석 요약</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -280,10 +286,12 @@ export default function PurchasePage() {
                     <span>{product.shippingCost}원</span>
                   </div>
                   <div className="flex justify-between font-bold text-lg pt-2 border-t">
-                    <span>총 결제 금액</span>
+                    <span>예상 견적 가격</span>
                     <span className="text-primary">{product.estimatedPrice}원</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">* 관리자 승인 후 결제가 진행됩니다.</p>
+                  <p className="text-sm text-muted-foreground">
+                    * 실제 견적은 전문가들의 제안에 따라 달라질 수 있습니다.
+                  </p>
                 </div>
               </CardContent>
             </Card>

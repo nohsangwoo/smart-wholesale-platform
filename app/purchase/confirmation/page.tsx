@@ -54,6 +54,7 @@ export default function ConfirmationPage() {
   }, [adminApproved, router])
 
   const handleAdminApproval = () => {
+    console.log("Admin approval for orderId:", orderId)
     setAdminApproved(true)
   }
 

@@ -60,19 +60,19 @@ export const mockProducts: Partial<ProductData>[] = [
     id: "prod-010",
     title: "홈 인테리어 소품 도매 (50개 단위)",
     originalPrice: 420000,
-    imageUrl: "/placeholder.svg?height=400&width=400&query=home decor items wholesale",
+    imageUrl: "/wholesale-decor-display.png",
   },
   {
     id: "prod-011",
     title: "스포츠 용품 도매 (30개 단위)",
     originalPrice: 750000,
-    imageUrl: "/placeholder.svg?height=400&width=400&query=sports equipment wholesale",
+    imageUrl: "/wholesale-sports-gear.png",
   },
   {
     id: "prod-012",
     title: "화장품 OEM 생산 (200개 단위)",
     originalPrice: 1100000,
-    imageUrl: "/placeholder.svg?height=400&width=400&query=cosmetics wholesale",
+    imageUrl: "/vibrant-cosmetics-display.png",
   },
 ]
 
@@ -139,7 +139,7 @@ export const mockOrders = [
     status: "배송 완료",
     orderDate: "2023-10-25",
     totalAmount: 1430000,
-    imageUrl: "/placeholder.svg?height=400&width=400&query=cosmetics wholesale",
+    imageUrl: "/vibrant-cosmetics-display.png",
   },
   {
     id: "order-8",
@@ -462,7 +462,7 @@ export const mockOrderDetails: OrderDetail[] = [
       platform: "Alibaba",
       originalPrice: 1100000,
       estimatedPrice: 1430000,
-      imageUrl: "/placeholder.svg?height=400&width=400&query=cosmetics wholesale",
+      imageUrl: "/vibrant-cosmetics-display.png",
       fees: 55000,
       tax: 88000,
       shippingCost: 45000,
@@ -568,3 +568,9 @@ export const mockOrderDetails: OrderDetail[] = [
     ],
   },
 ]
+
+// 디버깅을 위한 코드 (실제 배포 시 제거)
+console.log(
+  "Available mock order IDs:",
+  mockOrderDetails.map((order) => order.id),
+)

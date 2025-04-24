@@ -283,6 +283,51 @@ export default function OrderDetailPage() {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardHeader>
+              <CardTitle>선택한 견적 정보</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="relative h-16 w-16 rounded-md overflow-hidden flex-shrink-0">
+                  <Image src="/abstract-blue-logo.png" alt="스마트텍" fill className="object-cover" />
+                </div>
+                <div>
+                  <h3 className="font-medium">스마트텍</h3>
+                  <div className="flex items-center text-sm">
+                    <span className="text-amber-500">★</span>
+                    <span className="ml-1">4.8</span>
+                    <span className="text-muted-foreground ml-1">(342)</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">예상 배송: 7일 이내</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>상품 가격</span>
+                  <span>{order.product.originalPrice.toLocaleString()}원</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>서비스 수수료</span>
+                  <span>{order.product.fees.toLocaleString()}원</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>배송비</span>
+                  <span>{order.product.shippingCost.toLocaleString()}원</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>관세</span>
+                  <span>{order.product.tax.toLocaleString()}원</span>
+                </div>
+                <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                  <span>총 결제 금액</span>
+                  <span className="text-primary">{order.totalAmount.toLocaleString()}원</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="flex gap-4 justify-end">
             {order.status !== "배송 완료" && order.status !== "주문 취소" && (
               <Button variant="outline">주문 취소 요청</Button>

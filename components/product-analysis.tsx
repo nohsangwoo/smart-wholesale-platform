@@ -94,7 +94,17 @@ export function ProductAnalysis({ product }: ProductAnalysisProps) {
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="relative h-64 w-full md:w-1/3 rounded-md overflow-hidden">
-              <Image src={product.imageUrl || "/placeholder.svg"} alt={product.title} fill className="object-cover" />
+              <Image
+                src={product.imageUrl || "/placeholder.svg?height=400&width=400&query=product"}
+                alt={product.title}
+                fill
+                className="object-cover"
+                onError={(e) => {
+                  // Fallback to placeholder if the image fails to load
+                  const target = e.target as HTMLImageElement
+                  target.src = "/assorted-products-display.png"
+                }}
+              />
             </div>
 
             <div className="w-full md:w-2/3">

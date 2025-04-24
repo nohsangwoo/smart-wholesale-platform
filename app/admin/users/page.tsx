@@ -238,7 +238,7 @@ export default function AdminUsersPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>사용자 정보 수정</DialogTitle>
+            <DialogTitle>사용자 정��� 수정</DialogTitle>
             <DialogDescription>사용자 정보를 수정합니다.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
