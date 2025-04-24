@@ -144,7 +144,7 @@ export function ProductAnalysis({ product }: ProductAnalysisProps) {
       <div className="space-y-4">
         <Button className="w-full py-6 text-lg" size="lg" onClick={handlePurchaseClick}>
           <ShoppingCart className="mr-2 h-5 w-5" />
-          키키퍼 로지스틱스로 안전하게 구매 대행 요청
+          구매 대행 요청
         </Button>
 
         <div className="flex gap-4">

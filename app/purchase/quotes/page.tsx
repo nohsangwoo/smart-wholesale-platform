@@ -90,6 +90,14 @@ export default function QuotesPage() {
               // 견적 생성
               try {
                 const generatedQuotes = generateMockQuotes(fallbackOrderId, fallbackOrder.product.originalPrice)
+
+                // 키키퍼 로지스틱스 업체를 찾아 최상단으로 이동
+                const kikeeperIndex = generatedQuotes.findIndex((q) => q.vendorId === "vendor-1")
+                if (kikeeperIndex > 0) {
+                  const kikeeperQuote = generatedQuotes.splice(kikeeperIndex, 1)[0]
+                  generatedQuotes.unshift(kikeeperQuote)
+                }
+
                 setQuotes(generatedQuotes)
               } catch (error) {
                 console.error("Error generating quotes:", error)
@@ -127,6 +135,14 @@ export default function QuotesPage() {
         // 견적 생성
         try {
           const generatedQuotes = generateMockQuotes(orderId, orderData.product.originalPrice)
+
+          // 키키퍼 로지스틱스 업체를 찾아 최상단으로 이동
+          const kikeeperIndex = generatedQuotes.findIndex((q) => q.vendorId === "vendor-1")
+          if (kikeeperIndex > 0) {
+            const kikeeperQuote = generatedQuotes.splice(kikeeperIndex, 1)[0]
+            generatedQuotes.unshift(kikeeperQuote)
+          }
+
           setQuotes(generatedQuotes)
         } catch (error) {
           console.error("Error generating quotes:", error)
@@ -250,10 +266,11 @@ export default function QuotesPage() {
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-4">전문가 견적 ({quotes.length})</h2>
           <div className="space-y-4">
-            {quotes.map((quote) => {
+            {quotes.map((quote, index) => {
               const vendor = vendors[quote.vendorId]
               if (!vendor) return null
 
+              const isKikeeper = vendor.id === "vendor-1"
               const totalPrice =
                 quote.price +
                 quote.additionalFees.serviceFee +
@@ -264,7 +281,9 @@ export default function QuotesPage() {
               return (
                 <Card
                   key={quote.vendorId}
-                  className={`overflow-hidden transition-all ${selectedQuote === quote.vendorId ? "ring-2 ring-primary" : ""}`}
+                  className={`overflow-hidden transition-all ${
+                    selectedQuote === quote.vendorId ? "ring-2 ring-primary" : ""
+                  } ${isKikeeper ? "border-primary/30 bg-primary/5" : ""}`}
                 >
                   <CardContent className="p-0">
                     <div className="p-4 flex flex-col md:flex-row md:items-center gap-4">
@@ -285,6 +304,11 @@ export default function QuotesPage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="font-medium">{vendor.name}</h3>
+                            {isKikeeper && (
+                              <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                                추천
+                              </Badge>
+                            )}
                             {vendor.verified && (
                               <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
                                 <CheckCircle className="h-3 w-3 mr-1" />

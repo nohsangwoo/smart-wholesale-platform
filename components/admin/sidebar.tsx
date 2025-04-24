@@ -20,6 +20,8 @@ import {
   ChevronRight,
   Heart,
   Share2,
+  Store,
+  FileCheck,
 } from "lucide-react"
 
 interface SidebarItemProps {
@@ -75,6 +77,16 @@ export function AdminSidebar() {
       icon: <Users className="h-5 w-5" />,
       label: "사용자 관리",
       href: "/admin/users",
+    },
+    {
+      icon: <Store className="h-5 w-5" />,
+      label: "판매자 관리",
+      href: "/admin/vendors",
+    },
+    {
+      icon: <FileCheck className="h-5 w-5" />,
+      label: "가입 심사",
+      href: "/admin/applications",
     },
     {
       icon: <MessageSquare className="h-5 w-5" />,

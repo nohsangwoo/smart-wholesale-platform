@@ -4,9 +4,10 @@ import Link from "next/link"
 import { Logo } from "@/components/logo"
 import { UserMenu } from "@/components/user-menu"
 import { Button } from "@/components/ui/button"
-import { Heart, Share2, Settings, Store } from 'lucide-react'
+import { Heart, Share2, Settings, Store } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 import { useRouter } from "next/navigation"
+import { NotificationMenu } from "@/components/notification-menu"
 
 export function Header() {
   const { isAuthenticated } = useAuth()
@@ -29,6 +30,11 @@ export function Header() {
               판매자 페이지
             </Button>
           </Link>
+          <Link href="/vendor/register">
+            <Button variant="default" size="sm" className="gap-2">
+              판매자 가입 신청
+            </Button>
+          </Link>
         </div>
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
@@ -45,12 +51,20 @@ export function Header() {
                   <span className="sr-only">공유 내역</span>
                 </Button>
               </Link>
+              <NotificationMenu />
               <UserMenu />
             </>
           ) : (
-            <Link href="/login" className="text-sm font-medium hover:text-primary transition-colors">
-              로그인
-            </Link>
+            <>
+              <Link href="/vendor/register">
+                <Button variant="outline" size="sm">
+                  판매자 가입
+                </Button>
+              </Link>
+              <Link href="/login" className="text-sm font-medium hover:text-primary transition-colors">
+                로그인
+              </Link>
+            </>
           )}
         </div>
       </div>
