@@ -1,146 +1,93 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useVendorAuth } from "@/context/vendor-auth-context"
+import { VendorSidebar } from "@/components/vendor/sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Search, Filter, ArrowUpDown, Eye, FileText, Clock, CheckCircle, X, MessageSquare } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { mockOrderDetails } from "@/lib/mock-data"
-import { generateMockQuotes } from "@/lib/mock-vendors"
-import { ChatModal } from "@/components/chat/chat-modal"
+import { Input } from "@/components/ui/input"
+import { Search, FileText, Clock, CheckCircle, X, AlertCircle } from "lucide-react"
 
 export default function VendorQuotesPage() {
+  const { isAuthenticated, isLoading } = useVendorAuth()
   const router = useRouter()
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [sortConfig, setSortConfig] = useState<{
-    key: string
-    direction: "ascending" | "descending"
-  }>({
-    key: "createdAt",
-    direction: "descending",
-  })
-
-  const [pendingQuotes, setPendingQuotes] = useState<any[]>([])
-  const [submittedQuotes, setSubmittedQuotes] = useState<any[]>([])
-  const [acceptedQuotes, setAcceptedQuotes] = useState<any[]>([])
-  const [rejectedQuotes, setRejectedQuotes] = useState<any[]>([])
-  const [isChatModalOpen, setIsChatModalOpen] = useState(false)
-  const [selectedCustomer, setSelectedCustomer] = useState<{
-    id: string
-    name: string
-  } | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
-    // 모의 데이터 로드
-    loadMockData()
+    setIsMounted(true)
   }, [])
 
-  const loadMockData = () => {
-    // 모의 주문 데이터
-    const orders = mockOrderDetails
-
-    // 모의 견적 데이터 생성
-    const allQuotes = orders.flatMap((order) => {
-      try {
-        return generateMockQuotes(order.id, order.product.originalPrice)
-      } catch (error) {
-        console.error("Error generating quotes for order:", order.id, error)
-        return []
-      }
-    })
-
-    // 이 업체의 견적만 필터링 (vendor-1)
-    const vendorQuotes = allQuotes.filter((quote) => quote.vendorId === "vendor-1")
-
-    // 견적 상태 랜덤 할당
-    const enrichedQuotes = vendorQuotes.map((quote) => {
-      const order = orders.find((o) => o.id === quote.orderId)
-      const randomStatus = Math.random()
-      let status = "pending" // 기본값: 대기 중
-
-      if (randomStatus < 0.3) {
-        status = "pending" // 30%: 대기 중
-      } else if (randomStatus < 0.7) {
-        status = "submitted" // 40%: 제출됨
-      } else if (randomStatus < 0.9) {
-        status = "accepted" // 20%: 수락됨
-      } else {
-        status = "rejected" // 10%: 거절됨
-      }
-
-      return {
-        ...quote,
-        status,
-        productTitle: order?.product.title || "알 수 없는 상품",
-        customerName: "고객 " + Math.floor(Math.random() * 100),
-        customerId: "customer-" + Math.floor(Math.random() * 100),
-      }
-    })
-
-    // 상태별로 분류
-    setPendingQuotes(enrichedQuotes.filter((q) => q.status === "pending"))
-    setSubmittedQuotes(enrichedQuotes.filter((q) => q.status === "submitted"))
-    setAcceptedQuotes(enrichedQuotes.filter((q) => q.status === "accepted"))
-    setRejectedQuotes(enrichedQuotes.filter((q) => q.status === "rejected"))
-  }
-
-  const getFilteredQuotes = (quotes: any[]) => {
-    let result = [...quotes]
-
-    // 검색어 필터링
-    if (searchTerm) {
-      result = result.filter(
-        (quote) =>
-          quote.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          quote.productTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          quote.customerName.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
+  useEffect(() => {
+    if (isMounted && !isLoading && !isAuthenticated) {
+      router.push("/vendor/login")
     }
+  }, [isMounted, isAuthenticated, isLoading, router])
 
-    // 정렬 적용
-    result.sort((a, b) => {
-      if (sortConfig.key === "createdAt") {
-        const dateA = new Date(a.createdAt).getTime()
-        const dateB = new Date(b.createdAt).getTime()
-        return sortConfig.direction === "ascending" ? dateA - dateB : dateB - dateA
-      } else if (sortConfig.key === "price") {
-        return sortConfig.direction === "ascending" ? a.price - b.price : b.price - a.price
-      }
-      return 0
-    })
-
-    return result
+  // 로딩 중이거나 인증되지 않은 경우
+  if (!isMounted || isLoading || !isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+      </div>
+    )
   }
 
-  const handleSort = (key: string) => {
-    setSortConfig({
-      key,
-      direction: sortConfig.key === key && sortConfig.direction === "ascending" ? "descending" : "ascending",
-    })
-  }
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
-
-  const handleOpenChat = (customerId: string, customerName: string) => {
-    setSelectedCustomer({
-      id: customerId,
-      name: customerName,
-    })
-    setIsChatModalOpen(true)
-  }
+  // 모의 견적 데이터
+  const quotes = [
+    {
+      id: "Q-2023-001",
+      productName: "스마트폰 케이스 (iPhone 14 Pro)",
+      quantity: 500,
+      status: "pending",
+      requestDate: "2023-06-15",
+      expiryDate: "2023-06-22",
+      customerName: "김철수",
+      price: 4500000,
+    },
+    {
+      id: "Q-2023-002",
+      productName: "블루투스 이어폰",
+      quantity: 200,
+      status: "accepted",
+      requestDate: "2023-06-10",
+      expiryDate: "2023-06-17",
+      customerName: "이영희",
+      price: 6000000,
+    },
+    {
+      id: "Q-2023-003",
+      productName: "보조배터리 10000mAh",
+      quantity: 300,
+      status: "rejected",
+      requestDate: "2023-06-05",
+      expiryDate: "2023-06-12",
+      customerName: "박지민",
+      price: 3750000,
+    },
+    {
+      id: "Q-2023-004",
+      productName: "노트북 파우치 15인치",
+      quantity: 150,
+      status: "expired",
+      requestDate: "2023-05-28",
+      expiryDate: "2023-06-04",
+      customerName: "최수진",
+      price: 2250000,
+    },
+    {
+      id: "Q-2023-005",
+      productName: "무선 충전기",
+      quantity: 400,
+      status: "pending",
+      requestDate: "2023-06-14",
+      expiryDate: "2023-06-21",
+      customerName: "정민수",
+      price: 5200000,
+    },
+  ]
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -148,28 +95,28 @@ export default function VendorQuotesPage() {
         return (
           <Badge variant="outline" className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
-            견적 대기
-          </Badge>
-        )
-      case "submitted":
-        return (
-          <Badge variant="secondary" className="flex items-center gap-1">
-            <FileText className="h-3 w-3" />
-            제출됨
+            <span>대기 중</span>
           </Badge>
         )
       case "accepted":
         return (
-          <Badge variant="success" className="flex items-center gap-1">
+          <Badge variant="success" className="flex items-center gap-1 bg-green-100 text-green-800">
             <CheckCircle className="h-3 w-3" />
-            수락됨
+            <span>수락됨</span>
           </Badge>
         )
       case "rejected":
         return (
           <Badge variant="destructive" className="flex items-center gap-1">
             <X className="h-3 w-3" />
-            거절됨
+            <span>거절됨</span>
+          </Badge>
+        )
+      case "expired":
+        return (
+          <Badge variant="outline" className="flex items-center gap-1 bg-gray-100 text-gray-800">
+            <AlertCircle className="h-3 w-3" />
+            <span>만료됨</span>
           </Badge>
         )
       default:
@@ -178,346 +125,227 @@ export default function VendorQuotesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">견적 관리</h1>
-      </div>
+    <div className="flex min-h-screen bg-gray-50">
+      <VendorSidebar />
+      <div className="flex-1 p-6 overflow-auto">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">견적 관리</h1>
+            <Button>
+              <FileText className="mr-2 h-4 w-4" />새 견적 작성
+            </Button>
+          </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="주문번호, 상품명 또는 고객명으로 검색"
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <div className="flex items-center space-x-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input type="search" placeholder="견적 ID, 상품명, 고객명으로 검색..." className="pl-8" />
+            </div>
+            <Button variant="outline">필터</Button>
+          </div>
+
+          <Tabs defaultValue="all">
+            <TabsList>
+              <TabsTrigger value="all">전체</TabsTrigger>
+              <TabsTrigger value="pending">대기 중</TabsTrigger>
+              <TabsTrigger value="accepted">수락됨</TabsTrigger>
+              <TabsTrigger value="rejected">거절됨</TabsTrigger>
+              <TabsTrigger value="expired">만료됨</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>모든 견적</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-md border">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            견적 ID
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            상품 정보
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            고객명
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            금액
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            상태
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            만료일
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            작업
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {quotes.map((quote) => (
+                          <tr key={quote.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {quote.id}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <div>
+                                <p className="font-medium">{quote.productName}</p>
+                                <p className="text-xs text-gray-500">수량: {quote.quantity}개</p>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{quote.customerName}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {quote.price.toLocaleString()}원
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {getStatusBadge(quote.status)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{quote.expiryDate}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => router.push(`/vendor/quotes/${quote.id}`)}
+                              >
+                                상세보기
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* 다른 탭 콘텐츠도 유사한 구조로 구현 */}
+            <TabsContent value="pending" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>대기 중인 견적</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-md border">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      {/* 테이블 헤더 및 본문 구조는 위와 동일 */}
+                      <thead className="bg-gray-50">
+                        {/* 헤더 내용 */}
+                        <tr>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            견적 ID
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            상품 정보
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            고객명
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            금액
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            상태
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            만료일
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            작업
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {quotes
+                          .filter((q) => q.status === "pending")
+                          .map((quote) => (
+                            <tr key={quote.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {quote.id}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div>
+                                  <p className="font-medium">{quote.productName}</p>
+                                  <p className="text-xs text-gray-500">수량: {quote.quantity}개</p>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {quote.customerName}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {quote.price.toLocaleString()}원
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {getStatusBadge(quote.status)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{quote.expiryDate}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => router.push(`/vendor/quotes/${quote.id}`)}
+                                >
+                                  상세보기
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
-        <div className="w-full md:w-[200px]">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="상태 필터" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">모든 상태</SelectItem>
-              <SelectItem value="pending">견적 대기</SelectItem>
-              <SelectItem value="submitted">제출됨</SelectItem>
-              <SelectItem value="accepted">수락됨</SelectItem>
-              <SelectItem value="rejected">거절됨</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
       </div>
-
-      <Tabs defaultValue="pending">
-        <TabsList>
-          <TabsTrigger value="pending" className="relative">
-            견적 대기
-            {pendingQuotes.length > 0 && (
-              <Badge className="ml-2 bg-primary text-primary-foreground">{pendingQuotes.length}</Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="submitted">제출한 견적</TabsTrigger>
-          <TabsTrigger value="accepted">수락된 견적</TabsTrigger>
-          <TabsTrigger value="rejected">거절된 견적</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="pending">
-          <Card>
-            <CardHeader>
-              <CardTitle>견적 대기 목록</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>주문번호</TableHead>
-                      <TableHead>
-                        <Button variant="ghost" className="p-0 font-medium" onClick={() => handleSort("createdAt")}>
-                          요청일
-                          <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                      </TableHead>
-                      <TableHead>상품명</TableHead>
-                      <TableHead>고객명</TableHead>
-                      <TableHead>상태</TableHead>
-                      <TableHead className="text-right">관리</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {getFilteredQuotes(pendingQuotes).length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
-                          견적 대기 중인 요청이 없습니다.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      getFilteredQuotes(pendingQuotes).map((quote) => (
-                        <TableRow key={quote.orderId}>
-                          <TableCell className="font-medium">{quote.orderId}</TableCell>
-                          <TableCell>{formatDate(quote.createdAt)}</TableCell>
-                          <TableCell className="max-w-[200px] truncate">{quote.productTitle}</TableCell>
-                          <TableCell>{quote.customerName}</TableCell>
-                          <TableCell>{getStatusBadge(quote.status)}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => router.push(`/vendor/quotes/${quote.orderId}`)}
-                              >
-                                <Eye className="h-4 w-4" />
-                                <span className="sr-only">상세보기</span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleOpenChat(quote.customerId, quote.customerName)}
-                              >
-                                <MessageSquare className="h-4 w-4" />
-                                <span className="sr-only">채팅하기</span>
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="submitted">
-          <Card>
-            <CardHeader>
-              <CardTitle>제출한 견적 목록</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>주문번호</TableHead>
-                      <TableHead>
-                        <Button variant="ghost" className="p-0 font-medium" onClick={() => handleSort("createdAt")}>
-                          요청일
-                          <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                      </TableHead>
-                      <TableHead>상품명</TableHead>
-                      <TableHead>
-                        <Button variant="ghost" className="p-0 font-medium" onClick={() => handleSort("price")}>
-                          견적 금액
-                          <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                      </TableHead>
-                      <TableHead>상태</TableHead>
-                      <TableHead className="text-right">관리</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {getFilteredQuotes(submittedQuotes).length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
-                          제출한 견적이 없습니다.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      getFilteredQuotes(submittedQuotes).map((quote) => (
-                        <TableRow key={quote.orderId}>
-                          <TableCell className="font-medium">{quote.orderId}</TableCell>
-                          <TableCell>{formatDate(quote.createdAt)}</TableCell>
-                          <TableCell className="max-w-[200px] truncate">{quote.productTitle}</TableCell>
-                          <TableCell>{quote.price.toLocaleString()}원</TableCell>
-                          <TableCell>{getStatusBadge(quote.status)}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => router.push(`/vendor/quotes/${quote.orderId}`)}
-                              >
-                                <Eye className="h-4 w-4" />
-                                <span className="sr-only">상세보기</span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleOpenChat(quote.customerId, quote.customerName)}
-                              >
-                                <MessageSquare className="h-4 w-4" />
-                                <span className="sr-only">채팅하기</span>
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="accepted">
-          <Card>
-            <CardHeader>
-              <CardTitle>수락된 견적 목록</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>주문번호</TableHead>
-                      <TableHead>
-                        <Button variant="ghost" className="p-0 font-medium" onClick={() => handleSort("createdAt")}>
-                          요청일
-                          <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                      </TableHead>
-                      <TableHead>상품명</TableHead>
-                      <TableHead>
-                        <Button variant="ghost" className="p-0 font-medium" onClick={() => handleSort("price")}>
-                          견적 금액
-                          <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                      </TableHead>
-                      <TableHead>상태</TableHead>
-                      <TableHead className="text-right">관리</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {getFilteredQuotes(acceptedQuotes).length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
-                          수락된 견적이 없습니다.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      getFilteredQuotes(acceptedQuotes).map((quote) => (
-                        <TableRow key={quote.orderId}>
-                          <TableCell className="font-medium">{quote.orderId}</TableCell>
-                          <TableCell>{formatDate(quote.createdAt)}</TableCell>
-                          <TableCell className="max-w-[200px] truncate">{quote.productTitle}</TableCell>
-                          <TableCell>{quote.price.toLocaleString()}원</TableCell>
-                          <TableCell>{getStatusBadge(quote.status)}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => router.push(`/vendor/quotes/${quote.orderId}`)}
-                              >
-                                <Eye className="h-4 w-4" />
-                                <span className="sr-only">상세보기</span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleOpenChat(quote.customerId, quote.customerName)}
-                              >
-                                <MessageSquare className="h-4 w-4" />
-                                <span className="sr-only">채팅하기</span>
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="rejected">
-          <Card>
-            <CardHeader>
-              <CardTitle>거절된 견적 목록</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>주문번호</TableHead>
-                      <TableHead>
-                        <Button variant="ghost" className="p-0 font-medium" onClick={() => handleSort("createdAt")}>
-                          요청일
-                          <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                      </TableHead>
-                      <TableHead>상품명</TableHead>
-                      <TableHead>
-                        <Button variant="ghost" className="p-0 font-medium" onClick={() => handleSort("price")}>
-                          견적 금액
-                          <ArrowUpDown className="ml-2 h-4 w-4" />
-                        </Button>
-                      </TableHead>
-                      <TableHead>상태</TableHead>
-                      <TableHead className="text-right">관리</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {getFilteredQuotes(rejectedQuotes).length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
-                          거절된 견적이 없습니다.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      getFilteredQuotes(rejectedQuotes).map((quote) => (
-                        <TableRow key={quote.orderId}>
-                          <TableCell className="font-medium">{quote.orderId}</TableCell>
-                          <TableCell>{formatDate(quote.createdAt)}</TableCell>
-                          <TableCell className="max-w-[200px] truncate">{quote.productTitle}</TableCell>
-                          <TableCell>{quote.price.toLocaleString()}원</TableCell>
-                          <TableCell>{getStatusBadge(quote.status)}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => router.push(`/vendor/quotes/${quote.orderId}`)}
-                              >
-                                <Eye className="h-4 w-4" />
-                                <span className="sr-only">상세보기</span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleOpenChat(quote.customerId, quote.customerName)}
-                              >
-                                <MessageSquare className="h-4 w-4" />
-                                <span className="sr-only">채팅하기</span>
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* 채팅 모달 */}
-      <ChatModal
-        isOpen={isChatModalOpen}
-        onClose={() => setIsChatModalOpen(false)}
-        vendorId={selectedCustomer?.id}
-        vendorName={selectedCustomer?.name}
-      />
     </div>
   )
 }
