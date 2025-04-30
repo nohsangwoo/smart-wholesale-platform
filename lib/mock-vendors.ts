@@ -98,7 +98,7 @@ export const mockVendors: Vendor[] = [
     responseTime: "평균 1시간 이내",
     successRate: 96,
     completedOrders: 687,
-    profileImage: "/placeholder.svg?height=100&width=100&query=logistics-network",
+    profileImage: "/global-logistics-network.png",
     tags: ["신속배송", "정확한견적", "친절상담"],
   },
   {
@@ -112,7 +112,7 @@ export const mockVendors: Vendor[] = [
     responseTime: "평균 45분 이내",
     successRate: 97,
     completedOrders: 1123,
-    profileImage: "/placeholder.svg?height=100&width=100&query=fashion-logo",
+    profileImage: "/abstract-fashion-logo.png",
     tags: ["패션전문", "트렌드", "품질보증"],
   },
 ]

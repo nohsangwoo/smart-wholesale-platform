@@ -10,11 +10,19 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Search, FileText, Clock, CheckCircle, X, AlertCircle } from "lucide-react"
+import { ChatModal } from "@/components/chat/chat-modal"
 
 export default function VendorQuotesPage() {
   const { isAuthenticated, isLoading } = useVendorAuth()
   const router = useRouter()
   const [isMounted, setIsMounted] = useState(false)
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false)
+  const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; name: string } | null>(null)
+
+  const handleChatOpen = (customerId: string, customerName: string) => {
+    setSelectedCustomer({ id: customerId, name: customerName })
+    setIsChatModalOpen(true)
+  }
 
   useEffect(() => {
     setIsMounted(true)
@@ -160,7 +168,7 @@ export default function VendorQuotesPage() {
     switch (status) {
       case "pending":
         return (
-          <Badge variant="outline" className="flex items-center gap-1">
+          <Badge variant="outline" className="flex items-center gap-1 bg-yellow-100 text-yellow-800">
             <Clock className="h-3 w-3" />
             <span>대기 중</span>
           </Badge>
@@ -315,13 +323,34 @@ export default function VendorQuotesPage() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{quote.expiryDate}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => router.push(`/vendor/quotes/${quote.id}`)}
-                              >
-                                상세보기
-                              </Button>
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => router.push(`/vendor/quotes/${quote.id}`)}
+                                >
+                                  상세보기
+                                </Button>
+                                {quote.status === "pending" && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                                    onClick={() => handleChatOpen(quote.id, quote.customerName)}
+                                  >
+                                    채팅하기
+                                  </Button>
+                                )}
+                                {quote.status === "accepted" && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-green-600 border-green-200 hover:bg-green-50"
+                                  >
+                                    주문확인
+                                  </Button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -437,13 +466,34 @@ export default function VendorQuotesPage() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{quote.expiryDate}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => router.push(`/vendor/quotes/${quote.id}`)}
-                                >
-                                  상세보기
-                                </Button>
+                                <div className="flex justify-end gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => router.push(`/vendor/quotes/${quote.id}`)}
+                                  >
+                                    상세보기
+                                  </Button>
+                                  {quote.status === "pending" && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                                      onClick={() => handleChatOpen(quote.id, quote.customerName)}
+                                    >
+                                      채팅하기
+                                    </Button>
+                                  )}
+                                  {quote.status === "accepted" && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-green-600 border-green-200 hover:bg-green-50"
+                                    >
+                                      주문확인
+                                    </Button>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -456,6 +506,15 @@ export default function VendorQuotesPage() {
           </Tabs>
         </div>
       </div>
+      {/* 채팅 모달 */}
+      {selectedCustomer && (
+        <ChatModal
+          isOpen={isChatModalOpen}
+          onClose={() => setIsChatModalOpen(false)}
+          vendorId={selectedCustomer.id}
+          vendorName={selectedCustomer.name}
+        />
+      )}
     </div>
   )
 }

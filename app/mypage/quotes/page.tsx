@@ -12,6 +12,8 @@ import {
   XCircle,
   Clock3,
   Package,
+  Crown,
+  Star,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -67,6 +69,7 @@ const mockQuoteRequests = [
         deliveryDate: "2023-05-10",
         rating: 4.8,
         message: "고품질 실리콘 케이스로 제작해 드립니다. 로고 인쇄 무료 서비스 포함.",
+        isPremium: true,
       },
       {
         id: "v2",
@@ -77,6 +80,40 @@ const mockQuoteRequests = [
         deliveryDate: "2023-05-15",
         rating: 4.5,
         message: "대량 주문 할인 적용된 가격입니다. 추가 색상당 10만원 추가됩니다.",
+        isPremium: false,
+      },
+      {
+        id: "v3",
+        vendorName: "키키퍼 로지스틱스",
+        vendorId: "vendor3",
+        vendorAvatar: "/abstract-korean-logo.png",
+        price: "4,850,000원",
+        deliveryDate: "2023-05-08",
+        rating: 4.9,
+        message: "최고급 소재로 제작, 빠른 배송과 품질 보증 서비스 제공합니다.",
+        isPremium: true,
+      },
+      {
+        id: "v4",
+        vendorName: "디지털 마켓",
+        vendorId: "vendor4",
+        vendorAvatar: "/abstract-red-logo.png",
+        price: "4,600,000원",
+        deliveryDate: "2023-05-12",
+        rating: 4.3,
+        message: "합리적인 가격에 품질 보장. 대량 주문 특별 할인 적용.",
+        isPremium: false,
+      },
+      {
+        id: "v5",
+        vendorName: "스마트 솔루션",
+        vendorId: "vendor5",
+        vendorAvatar: "/elegant-fashion-logo.png",
+        price: "4,700,000원",
+        deliveryDate: "2023-05-11",
+        rating: 4.6,
+        message: "맞춤형 디자인 서비스 제공. 로고 인쇄 및 패키징 포함.",
+        isPremium: true,
       },
     ],
   },
@@ -243,7 +280,107 @@ const mockQuoteRequests = [
     ],
     quotes: [],
   },
+  {
+    id: "q7",
+    productName: "디자인 티셔츠 (1000개)",
+    requestDate: "2023-05-10",
+    status: "견적완료",
+    description: "회사 로고가 인쇄된 고품질 면 티셔츠 대량 구매",
+    budget: "15,000,000원",
+    deadline: "2023-06-01",
+    isMultiProduct: false,
+    products: [
+      {
+        id: "p7",
+        name: "디자인 티셔츠 (1000개)",
+        description: "회사 로고가 인쇄된 고품질 면 티셔츠",
+        imageUrl: "/diverse-casual-tees.png",
+        additionalRequest: "다양한 사이즈(S-XXL), 로고 인쇄, 개별 포장 필요",
+      },
+    ],
+    quotes: [
+      {
+        id: "v6",
+        vendorName: "패션 프로",
+        vendorId: "vendor6",
+        vendorAvatar: "/elegant-fashion-logo.png",
+        price: "14,500,000원",
+        deliveryDate: "2023-05-25",
+        rating: 4.7,
+        message: "프리미엄 면 소재 사용, 고품질 로고 인쇄 및 개별 포장 서비스 제공.",
+        isPremium: true,
+      },
+      {
+        id: "v7",
+        vendorName: "키키퍼 로지스틱스",
+        vendorId: "vendor7",
+        vendorAvatar: "/abstract-korean-logo.png",
+        price: "14,800,000원",
+        deliveryDate: "2023-05-20",
+        rating: 4.9,
+        message: "최고급 원단 사용, 빠른 배송과 품질 보증. 추가 요청사항 모두 반영 가능.",
+        isPremium: true,
+      },
+      {
+        id: "v8",
+        vendorName: "의류 마스터",
+        vendorId: "vendor8",
+        vendorAvatar: "/abstract-blue-logo.png",
+        price: "14,200,000원",
+        deliveryDate: "2023-05-28",
+        rating: 4.5,
+        message: "대량 주문 특별 할인 적용. 다양한 사이즈와 개별 포장 모두 가능합니다.",
+        isPremium: false,
+      },
+      {
+        id: "v9",
+        vendorName: "글로벌 어패럴",
+        vendorId: "vendor9",
+        vendorAvatar: "/abstract-green-logo.png",
+        price: "14,000,000원",
+        deliveryDate: "2023-06-01",
+        rating: 4.4,
+        message: "합리적인 가격에 품질 보장. 추가 주문 시 할인 혜택 제공.",
+        isPremium: false,
+      },
+      {
+        id: "v10",
+        vendorName: "프리미엄 텍스타일",
+        vendorId: "vendor10",
+        vendorAvatar: "/abstract-red-logo.png",
+        price: "14,600,000원",
+        deliveryDate: "2023-05-26",
+        rating: 4.8,
+        message: "최고급 면 소재와 프리미엄 인쇄 기술로 완벽한 품질 보장.",
+        isPremium: true,
+      },
+    ],
+  },
 ]
+
+// 견적 제안 목록 정렬 함수 추가
+const sortVendorQuotes = (quotes) => {
+  // 키키퍼 로지스틱스가 있는지 확인
+  const kikiperIndex = quotes.findIndex((q) => q.vendorName === "키키퍼 로지스틱스")
+
+  // 정렬된 배열 생성
+  let sortedQuotes = [...quotes]
+
+  // 키키퍼 로지스틱스가 있으면 맨 앞으로 이동
+  if (kikiperIndex !== -1) {
+    const kikiper = sortedQuotes.splice(kikiperIndex, 1)[0]
+    sortedQuotes = [kikiper, ...sortedQuotes]
+  }
+
+  // 나머지는 프리미엄 여부에 따라 정렬
+  sortedQuotes = [
+    ...sortedQuotes.filter((q) => q.vendorName === "키키퍼 로지스틱스"),
+    ...sortedQuotes.filter((q) => q.isPremium && q.vendorName !== "키키퍼 로지스틱스"),
+    ...sortedQuotes.filter((q) => !q.isPremium && q.vendorName !== "키키퍼 로지스틱스"),
+  ]
+
+  return sortedQuotes
+}
 
 export default function QuotesPage() {
   const { user, isAuthenticated, isLoading } = useAuth()
@@ -444,7 +581,7 @@ export default function QuotesPage() {
                         견적 보기 <ChevronRight className="h-4 w-4" />
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-3xl">
+                    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle>
                           <div className="flex items-center gap-2">
@@ -468,10 +605,16 @@ export default function QuotesPage() {
                         </div>
                       ) : (
                         <div className="space-y-4 mt-4">
-                          {quote.quotes.map((vendor) => (
+                          {sortVendorQuotes(quote.quotes).map((vendor) => (
                             <Card
                               key={vendor.id}
-                              className={`overflow-hidden ${vendor.vendorName === "키키퍼 로지스틱스" ? "border-blue-300 bg-blue-50/20" : ""}`}
+                              className={`overflow-hidden ${
+                                vendor.vendorName === "키키퍼 로지스틱스"
+                                  ? "border-blue-300 bg-blue-50/20"
+                                  : vendor.isPremium
+                                    ? "border-amber-200 bg-amber-50/20"
+                                    : ""
+                              }`}
                             >
                               <CardHeader className="pb-3">
                                 <div className="flex justify-between items-start">
@@ -484,7 +627,27 @@ export default function QuotesPage() {
                                       />
                                     </div>
                                     <div>
-                                      <CardTitle className="text-lg">{vendor.vendorName}</CardTitle>
+                                      <div className="flex items-center gap-2">
+                                        <CardTitle className="text-lg">{vendor.vendorName}</CardTitle>
+                                        {vendor.isPremium && vendor.vendorName !== "키키퍼 로지스틱스" && (
+                                          <Badge
+                                            variant="outline"
+                                            className="bg-amber-100 text-amber-800 border-amber-200"
+                                          >
+                                            <Crown className="h-3 w-3 mr-1" />
+                                            프리미엄
+                                          </Badge>
+                                        )}
+                                        {vendor.vendorName === "키키퍼 로지스틱스" && (
+                                          <Badge
+                                            variant="outline"
+                                            className="bg-blue-100 text-blue-800 border-blue-200"
+                                          >
+                                            <Star className="h-3 w-3 mr-1" />
+                                            추천
+                                          </Badge>
+                                        )}
+                                      </div>
                                       <div className="flex items-center mt-1">
                                         <div className="flex">
                                           {[...Array(5)].map((_, i) => (

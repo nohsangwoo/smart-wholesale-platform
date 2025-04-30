@@ -22,6 +22,10 @@ import {
   Layers,
   ChevronDown,
   ChevronUp,
+  Clock,
+  CheckCircle,
+  X,
+  InfoIcon,
 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ChatModal } from "@/components/chat/chat-modal"
@@ -35,6 +39,7 @@ export default function QuoteDetailPage({ params }: { params: { id: string } }) 
   const [expandedProducts, setExpandedProducts] = useState<number[]>([])
   const [isChatModalOpen, setIsChatModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
+  const [isEditing, setIsEditing] = useState(false)
 
   // 견적 요청 상세 정보 (실제로는 API에서 가져와야 함)
   const quoteRequest = {
@@ -43,7 +48,17 @@ export default function QuoteDetailPage({ params }: { params: { id: string } }) 
     customerEmail: "hong@example.com",
     requestDate: "2023-04-20",
     deadline: "2023-04-25",
-    status: "new",
+    status:
+      params.id === "Q-2023-001" ||
+      params.id === "Q-2023-005" ||
+      params.id === "Q-2023-006" ||
+      params.id === "Q-2023-007"
+        ? "pending"
+        : params.id === "Q-2023-002"
+          ? "accepted"
+          : params.id === "Q-2023-003"
+            ? "rejected"
+            : "expired",
     isMultiProduct: params.id === "Q-2023-006" || params.id === "Q-2023-007",
     products:
       params.id === "Q-2023-006"
@@ -290,6 +305,41 @@ export default function QuoteDetailPage({ params }: { params: { id: string } }) 
     }
   }
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "pending":
+        return (
+          <Badge variant="outline" className="flex items-center gap-1 bg-yellow-100 text-yellow-800">
+            <Clock className="h-3 w-3" />
+            <span>대기 중</span>
+          </Badge>
+        )
+      case "accepted":
+        return (
+          <Badge variant="success" className="flex items-center gap-1 bg-green-100 text-green-800">
+            <CheckCircle className="h-3 w-3" />
+            <span>수락됨</span>
+          </Badge>
+        )
+      case "rejected":
+        return (
+          <Badge variant="destructive" className="flex items-center gap-1">
+            <X className="h-3 w-3" />
+            <span>거절됨</span>
+          </Badge>
+        )
+      case "expired":
+        return (
+          <Badge variant="outline" className="flex items-center gap-1 bg-gray-100 text-gray-800">
+            <AlertCircle className="h-3 w-3" />
+            <span>만료됨</span>
+          </Badge>
+        )
+      default:
+        return <Badge variant="outline">{status}</Badge>
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
@@ -297,7 +347,7 @@ export default function QuoteDetailPage({ params }: { params: { id: string } }) 
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h1 className="text-2xl font-bold">견적 상세 - {params.id}</h1>
-        <Badge>{quoteRequest.status === "new" ? "신규" : "처리 중"}</Badge>
+        {getStatusBadge(quoteRequest.status)}
         {quoteRequest.isMultiProduct && (
           <Badge variant="outline" className="bg-blue-100 text-blue-800">
             다중 상품 ({quoteRequest.products.length}개)
@@ -363,11 +413,48 @@ export default function QuoteDetailPage({ params }: { params: { id: string } }) 
                 </div>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full gap-2" onClick={() => setIsChatModalOpen(true)}>
-                <MessageSquare className="h-4 w-4" />
-                고객과 채팅하기
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={() => router.push("/vendor/quotes")}>
+                목록으로
               </Button>
+              <div className="flex gap-2">
+                {quoteRequest.status === "pending" && (
+                  <>
+                    <Button variant="outline" onClick={() => setIsEditing(true)} className="gap-2">
+                      <FileText className="h-4 w-4" />
+                      견적 수정
+                    </Button>
+                    <Button onClick={() => setIsChatModalOpen(true)} className="gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      고객과 채팅하기
+                    </Button>
+                  </>
+                )}
+                {quoteRequest.status === "accepted" && (
+                  <>
+                    <Button variant="success" className="gap-2 bg-green-100 text-green-800 hover:bg-green-200">
+                      <CheckCircle className="h-4 w-4" />
+                      수락됨
+                    </Button>
+                    <Button onClick={() => setIsChatModalOpen(true)} className="gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      고객과 채팅하기
+                    </Button>
+                  </>
+                )}
+                {quoteRequest.status === "rejected" && (
+                  <Button variant="destructive" className="gap-2" disabled>
+                    <X className="h-4 w-4" />
+                    거절됨
+                  </Button>
+                )}
+                {quoteRequest.status === "expired" && (
+                  <Button variant="outline" className="gap-2 bg-gray-100 text-gray-800" disabled>
+                    <AlertCircle className="h-4 w-4" />
+                    만료됨
+                  </Button>
+                )}
+              </div>
             </CardFooter>
           </Card>
 
@@ -375,70 +462,131 @@ export default function QuoteDetailPage({ params }: { params: { id: string } }) 
             <CardHeader>
               <CardTitle>견적 작성</CardTitle>
             </CardHeader>
-            <CardContent>
-              {error && (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
+            {isEditing ? (
+              <CardContent>
+                <Alert className="mb-4 bg-blue-50 border-blue-200">
+                  <InfoIcon className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-800">
+                    견적을 수정한 후 저장하시면 고객에게 수정된 견적이 전달됩니다.
+                  </AlertDescription>
                 </Alert>
-              )}
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="price">견적 금액 (원)</Label>
-                  <Input
-                    id="price"
-                    name="price"
-                    placeholder="예: 2500000"
-                    value={formData.products[0].price}
-                    onChange={(e) => handleProductInputChange(0, e)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="deliveryDays">예상 배송 기간 (일)</Label>
-                  <Input
-                    id="deliveryDays"
-                    name="deliveryDays"
-                    placeholder="예: 7"
-                    value={formData.products[0].deliveryDays}
-                    onChange={(e) => handleProductInputChange(0, e)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">견적 설명</Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    placeholder="견적에 대한 상세 설명을 입력하세요."
-                    rows={4}
-                    value={formData.products[0].description}
-                    onChange={(e) => handleProductInputChange(0, e)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="additionalNotes">추가 참고사항</Label>
-                  <Textarea
-                    id="additionalNotes"
-                    name="additionalNotes"
-                    placeholder="추가 참고사항이 있다면 입력하세요."
-                    rows={2}
-                    value={formData.products[0].additionalNotes}
-                    onChange={(e) => handleProductInputChange(0, e)}
-                  />
-                </div>
-              </form>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={() => router.push("/vendor/quotes")}>
-                취소
-              </Button>
-              <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2">
-                <Send className="h-4 w-4" />
-                {isSubmitting ? "제출 중..." : "견적 제출하기"}
-              </Button>
-            </CardFooter>
+                <form className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="price">견적 금액 (원)</Label>
+                    <Input
+                      id="price"
+                      name="price"
+                      placeholder="예: 2500000"
+                      value={formData.products[0].price}
+                      onChange={(e) => handleProductInputChange(0, e)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="deliveryDays">예상 배송 기간 (일)</Label>
+                    <Input
+                      id="deliveryDays"
+                      name="deliveryDays"
+                      placeholder="예: 7"
+                      value={formData.products[0].deliveryDays}
+                      onChange={(e) => handleProductInputChange(0, e)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">견적 설명</Label>
+                    <Textarea
+                      id="description"
+                      name="description"
+                      placeholder="견적에 대한 상세 설명을 입력하세요."
+                      rows={4}
+                      value={formData.products[0].description}
+                      onChange={(e) => handleProductInputChange(0, e)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="additionalNotes">추가 참고사항</Label>
+                    <Textarea
+                      id="additionalNotes"
+                      name="additionalNotes"
+                      placeholder="추가 참고사항이 있다면 입력하세요."
+                      rows={2}
+                      value={formData.products[0].additionalNotes}
+                      onChange={(e) => handleProductInputChange(0, e)}
+                    />
+                  </div>
+                </form>
+              </CardContent>
+            ) : (
+              <CardContent>
+                {error && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="price">견적 금액 (원)</Label>
+                    <Input
+                      id="price"
+                      name="price"
+                      placeholder="예: 2500000"
+                      value={formData.products[0].price}
+                      onChange={(e) => handleProductInputChange(0, e)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="deliveryDays">예상 배송 기간 (일)</Label>
+                    <Input
+                      id="deliveryDays"
+                      name="deliveryDays"
+                      placeholder="예: 7"
+                      value={formData.products[0].deliveryDays}
+                      onChange={(e) => handleProductInputChange(0, e)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">견적 설명</Label>
+                    <Textarea
+                      id="description"
+                      name="description"
+                      placeholder="견적에 대한 상세 설명을 입력하세요."
+                      rows={4}
+                      value={formData.products[0].description}
+                      onChange={(e) => handleProductInputChange(0, e)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="additionalNotes">추가 참고사항</Label>
+                    <Textarea
+                      id="additionalNotes"
+                      name="additionalNotes"
+                      placeholder="추가 참고사항이 있다면 입력하세요."
+                      rows={2}
+                      value={formData.products[0].additionalNotes}
+                      onChange={(e) => handleProductInputChange(0, e)}
+                    />
+                  </div>
+                </form>
+              </CardContent>
+            )}
+
+            {isEditing && (
+              <CardFooter className="flex justify-between border-t pt-4">
+                <Button variant="outline" onClick={() => setIsEditing(false)}>
+                  취소
+                </Button>
+                <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2">
+                  <Send className="h-4 w-4" />
+                  {isSubmitting ? "저장 중..." : "수정된 견적 저장"}
+                </Button>
+              </CardFooter>
+            )}
           </Card>
         </div>
       ) : (
@@ -608,7 +756,7 @@ export default function QuoteDetailPage({ params }: { params: { id: string } }) 
                 </CardContent>
                 <CardFooter className="flex justify-between">
                   <Button variant="outline" onClick={() => router.push("/vendor/quotes")}>
-                    취소
+                    목록으로
                   </Button>
                   <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2">
                     <Send className="h-4 w-4" />

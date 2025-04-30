@@ -4,7 +4,19 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useVendorAuth } from "@/context/vendor-auth-context"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, FileText, ShoppingCart, MessageSquare, TrendingUp, Settings, LogOut, Store, FileSearch } from 'lucide-react'
+import { cn } from "@/lib/utils"
+import {
+  LayoutDashboard,
+  FileText,
+  ShoppingCart,
+  MessageSquare,
+  TrendingUp,
+  Settings,
+  LogOut,
+  Store,
+  FileSearch,
+  Crown,
+} from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export function VendorSidebar() {
@@ -18,6 +30,12 @@ export function VendorSidebar() {
   }
 
   const menuItems = [
+    {
+      title: "판매자 프리미엄 신청",
+      href: "/vendor/premium",
+      icon: <Crown className="h-5 w-5" />,
+      highlight: true,
+    },
     {
       title: "대시보드",
       icon: <LayoutDashboard className="h-5 w-5" />,
@@ -83,20 +101,20 @@ export function VendorSidebar() {
       )}
 
       <nav className="space-y-1 flex-1">
-        {menuItems.map((item) => {
-          const isActive = pathname === item.href
-          return (
-            <Link key={item.href} href={item.href} passHref>
-              <Button
-                variant={isActive ? "secondary" : "ghost"}
-                className={`w-full justify-start ${isActive ? "bg-primary/10" : ""}`}
-              >
-                {item.icon}
-                <span className="ml-3">{item.title}</span>
-              </Button>
-            </Link>
-          )
-        })}
+        {menuItems.map((item, index) => (
+          <Link
+            key={index}
+            href={item.href}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900",
+              pathname === item.href ? "bg-gray-100 text-gray-900" : "",
+              item.highlight ? "bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800" : "",
+            )}
+          >
+            {item.icon}
+            {item.title}
+          </Link>
+        ))}
       </nav>
 
       <div className="pt-4 mt-4 border-t">
