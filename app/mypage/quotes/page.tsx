@@ -2,7 +2,17 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Calendar, Clock, MessageSquare, ChevronRight, ArrowUpDown, CheckCircle2, XCircle, Clock3 } from "lucide-react"
+import {
+  Calendar,
+  Clock,
+  MessageSquare,
+  ChevronRight,
+  ArrowUpDown,
+  CheckCircle2,
+  XCircle,
+  Clock3,
+  Package,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -18,6 +28,7 @@ import {
 } from "@/components/ui/dialog"
 import { useAuth } from "@/context/auth-context"
 import { ChatModal } from "@/components/chat/chat-modal"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 // 견적 상태에 따른 배지 색상 및 아이콘
 const statusConfig = {
@@ -26,7 +37,7 @@ const statusConfig = {
   거절됨: { color: "bg-red-100 text-red-800", icon: <XCircle className="h-4 w-4 mr-1" /> },
 }
 
-// 모의 데이터: 견적 요청 목록
+// 모의 데이터: 견적 요청 목록 (다중 상품 견적 요청 포함)
 const mockQuoteRequests = [
   {
     id: "q1",
@@ -36,6 +47,16 @@ const mockQuoteRequests = [
     description: "다양한 색상의 아이폰 13 케이스 대량 구매를 위한 견적 요청",
     budget: "5,000,000원",
     deadline: "2023-04-30",
+    isMultiProduct: false,
+    products: [
+      {
+        id: "p1",
+        name: "스마트폰 케이스 (500개)",
+        description: "다양한 색상의 아이폰 13 케이스",
+        imageUrl: "/bulk-smartphone-cases.png",
+        additionalRequest: "로고 인쇄 필요, 다양한 색상 옵션 필요",
+      },
+    ],
     quotes: [
       {
         id: "v1",
@@ -67,6 +88,16 @@ const mockQuoteRequests = [
     description: "블루투스 5.0 지원 무선 이어폰 대량 구매 견적 요청",
     budget: "8,000,000원",
     deadline: "2023-04-25",
+    isMultiProduct: false,
+    products: [
+      {
+        id: "p2",
+        name: "무선 이어폰 (200개)",
+        description: "블루투스 5.0 지원 무선 이어폰",
+        imageUrl: "/bulk-bluetooth-earphones.png",
+        additionalRequest: "블루투스 5.0 지원, 노이즈 캔슬링 기능 필요",
+      },
+    ],
     quotes: [],
   },
   {
@@ -77,6 +108,16 @@ const mockQuoteRequests = [
     description: "15인치 노트북용 방수 파우치, 로고 인쇄 필요",
     budget: "3,000,000원",
     deadline: "2023-04-20",
+    isMultiProduct: false,
+    products: [
+      {
+        id: "p3",
+        name: "노트북 파우치 (300개)",
+        description: "15인치 노트북용 방수 파우치",
+        imageUrl: "/laptop-sleeve.png",
+        additionalRequest: "방수 소재, 로고 인쇄 필요",
+      },
+    ],
     quotes: [
       {
         id: "v3",
@@ -98,6 +139,108 @@ const mockQuoteRequests = [
     description: "인체공학적 디자인의 사무용 의자, 조절 가능한 팔걸이 필요",
     budget: "7,500,000원",
     deadline: "2023-04-15",
+    isMultiProduct: false,
+    products: [
+      {
+        id: "p4",
+        name: "사무용 의자 (50개)",
+        description: "인체공학적 디자인의 사무용 의자",
+        imageUrl: "/ergonomic-office-chair.png",
+        additionalRequest: "인체공학적 디자인, 조절 가능한 팔걸이 필요",
+      },
+    ],
+    quotes: [],
+  },
+  {
+    id: "q5",
+    productName: "모바일 액세서리 패키지 (3종)",
+    requestDate: "2023-05-01",
+    status: "견적완료",
+    description: "스마트폰 액세서리 3종 세트 대량 구매 견적 요청",
+    budget: "12,000,000원",
+    deadline: "2023-05-20",
+    isMultiProduct: true,
+    products: [
+      {
+        id: "p5-1",
+        name: "무선 충전기 (300개)",
+        description: "고속 무선 충전기, 다양한 스마트폰 호환",
+        imageUrl: "/wireless-charger.png",
+        additionalRequest: "15W 이상 고속 충전 지원, 다양한 스마트폰 호환 필요",
+      },
+      {
+        id: "p5-2",
+        name: "보조 배터리 (200개)",
+        description: "10,000mAh 이상 고용량 보조 배터리",
+        imageUrl: "/portable-power-bank.png",
+        additionalRequest: "10,000mAh 이상, USB-C 및 라이트닝 포트 지원 필요",
+      },
+      {
+        id: "p5-3",
+        name: "스마트워치 밴드 (500개)",
+        description: "다양한 색상의 실리콘 스마트워치 밴드",
+        imageUrl: "/smartwatch-band-variety.png",
+        additionalRequest: "다양한 색상, 여러 스마트워치 모델 호환 필요",
+      },
+    ],
+    quotes: [
+      {
+        id: "v4",
+        vendorName: "키키퍼 로지스틱스",
+        vendorId: "vendor4",
+        vendorAvatar: "/abstract-korean-logo.png",
+        price: "11,500,000원",
+        deliveryDate: "2023-05-25",
+        rating: 4.9,
+        message: "모든 제품 고품질 보장, 대량 주문 할인 적용. 추가 요청사항 모두 반영 가능합니다.",
+        productPrices: [
+          { productId: "p5-1", price: "4,200,000원" },
+          { productId: "p5-2", price: "3,800,000원" },
+          { productId: "p5-3", price: "3,500,000원" },
+        ],
+      },
+      {
+        id: "v5",
+        vendorName: "글로벌 테크",
+        vendorId: "vendor5",
+        vendorAvatar: "/abstract-blue-logo.png",
+        price: "11,800,000원",
+        deliveryDate: "2023-05-20",
+        rating: 4.6,
+        message: "프리미엄 품질, 빠른 배송. 모든 제품 1년 품질 보증 포함.",
+        productPrices: [
+          { productId: "p5-1", price: "4,300,000원" },
+          { productId: "p5-2", price: "4,000,000원" },
+          { productId: "p5-3", price: "3,500,000원" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "q6",
+    productName: "오피스 패키지 (2종)",
+    requestDate: "2023-05-05",
+    status: "대기중",
+    description: "사무실 용품 2종 세트 대량 구매 견적 요청",
+    budget: "9,000,000원",
+    deadline: "2023-05-25",
+    isMultiProduct: true,
+    products: [
+      {
+        id: "p6-1",
+        name: "블루투스 스피커 (100개)",
+        description: "회의실용 고품질 블루투스 스피커",
+        imageUrl: "/bluetooth-speaker.png",
+        additionalRequest: "고음질, 회의실 사용에 적합한 디자인",
+      },
+      {
+        id: "p6-2",
+        name: "사무용 모니터 (50개)",
+        description: "27인치 Full HD 모니터",
+        imageUrl: "/office-monitor.png",
+        additionalRequest: "27인치 이상, Full HD 해상도, 눈부심 방지 기능 필요",
+      },
+    ],
     quotes: [],
   },
 ]
@@ -207,11 +350,24 @@ export default function QuotesPage() {
         ) : (
           <div className="space-y-6">
             {sortedQuotes.map((quote) => (
-              <Card key={quote.id} className="overflow-hidden">
+              <Card
+                key={quote.id}
+                className={`overflow-hidden ${quote.isMultiProduct ? "border-blue-200 bg-blue-50/30" : ""}`}
+              >
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-xl">{quote.productName}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-xl">
+                          {quote.isMultiProduct ? `${quote.productName}` : quote.productName}
+                        </CardTitle>
+                        {quote.isMultiProduct && (
+                          <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                            <Package className="h-3 w-3 mr-1" />
+                            다중 상품
+                          </Badge>
+                        )}
+                      </div>
                       <CardDescription className="mt-1">
                         <div className="flex items-center gap-4 text-sm">
                           <span className="flex items-center">
@@ -235,6 +391,38 @@ export default function QuotesPage() {
                 </CardHeader>
                 <CardContent className="pb-3">
                   <p className="text-sm text-muted-foreground mb-2">{quote.description}</p>
+
+                  {quote.isMultiProduct && (
+                    <div className="mt-3 mb-2">
+                      <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="products">
+                          <AccordionTrigger className="text-sm font-medium py-2">
+                            포함된 상품 ({quote.products.length}개)
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-2 mt-1">
+                              {quote.products.map((product, index) => (
+                                <div key={product.id} className="flex items-start gap-2 p-2 rounded-md bg-background">
+                                  <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                                    <img
+                                      src={product.imageUrl || "/placeholder.svg"}
+                                      alt={product.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium">{product.name}</p>
+                                    <p className="text-xs text-muted-foreground">{product.description}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    </div>
+                  )}
+
                   <div className="flex flex-wrap gap-2 mt-2">
                     <Badge variant="outline" className="bg-blue-50">
                       예산: {quote.budget}
@@ -258,7 +446,17 @@ export default function QuotesPage() {
                     </DialogTrigger>
                     <DialogContent className="max-w-3xl">
                       <DialogHeader>
-                        <DialogTitle>견적 제안 목록 - {quote.productName}</DialogTitle>
+                        <DialogTitle>
+                          <div className="flex items-center gap-2">
+                            견적 제안 목록 - {quote.productName}
+                            {quote.isMultiProduct && (
+                              <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                                <Package className="h-3 w-3 mr-1" />
+                                다중 상품
+                              </Badge>
+                            )}
+                          </div>
+                        </DialogTitle>
                         <DialogDescription>
                           요청일: {quote.requestDate} | 마감일: {quote.deadline} | 예산: {quote.budget}
                         </DialogDescription>
@@ -271,7 +469,10 @@ export default function QuotesPage() {
                       ) : (
                         <div className="space-y-4 mt-4">
                           {quote.quotes.map((vendor) => (
-                            <Card key={vendor.id} className="overflow-hidden">
+                            <Card
+                              key={vendor.id}
+                              className={`overflow-hidden ${vendor.vendorName === "키키퍼 로지스틱스" ? "border-blue-300 bg-blue-50/20" : ""}`}
+                            >
                               <CardHeader className="pb-3">
                                 <div className="flex justify-between items-start">
                                   <div className="flex items-center gap-3">
@@ -308,6 +509,48 @@ export default function QuotesPage() {
                               </CardHeader>
                               <CardContent className="pb-3">
                                 <p className="text-sm">{vendor.message}</p>
+
+                                {quote.isMultiProduct && vendor.productPrices && (
+                                  <div className="mt-3 mb-2">
+                                    <Accordion type="single" collapsible className="w-full">
+                                      <AccordionItem value="product-prices">
+                                        <AccordionTrigger className="text-sm font-medium py-2">
+                                          상품별 견적 가격
+                                        </AccordionTrigger>
+                                        <AccordionContent>
+                                          <div className="space-y-2 mt-1">
+                                            {vendor.productPrices.map((productPrice: any) => {
+                                              const product = quote.products.find(
+                                                (p) => p.id === productPrice.productId,
+                                              )
+                                              return (
+                                                <div
+                                                  key={productPrice.productId}
+                                                  className="flex justify-between items-center p-2 rounded-md bg-background"
+                                                >
+                                                  <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                                                      <img
+                                                        src={product?.imageUrl || "/placeholder.svg"}
+                                                        alt={product?.name || "상품 이미지"}
+                                                        className="w-full h-full object-cover"
+                                                      />
+                                                    </div>
+                                                    <span className="text-sm">{product?.name || "상품"}</span>
+                                                  </div>
+                                                  <Badge variant="outline" className="bg-green-50 text-green-800">
+                                                    {productPrice.price}
+                                                  </Badge>
+                                                </div>
+                                              )
+                                            })}
+                                          </div>
+                                        </AccordionContent>
+                                      </AccordionItem>
+                                    </Accordion>
+                                  </div>
+                                )}
+
                                 <div className="flex flex-wrap gap-2 mt-3">
                                   <Badge variant="outline" className="bg-blue-50">
                                     배송 예정일: {vendor.deliveryDate}

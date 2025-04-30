@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Search, Filter, ArrowUpDown, Eye } from "lucide-react"
+import { Search, Filter, ArrowUpDown, Eye, Package, FileText } from "lucide-react"
 import { mockOrders } from "@/lib/mock-data"
 
 export default function AdminOrdersPage() {
@@ -77,9 +77,35 @@ export default function AdminOrdersPage() {
         return "outline"
       case "주문 취소":
         return "destructive"
+      case "견적 요청":
+        return "secondary"
       default:
         return "outline"
     }
+  }
+
+  // 주문에 포함된 상품 개수 표시 함수
+  const getProductCountBadge = (count: number) => {
+    if (count <= 1) return null
+
+    return (
+      <Badge variant="secondary" className="ml-2">
+        <Package className="h-3 w-3 mr-1" />
+        {count}개 상품
+      </Badge>
+    )
+  }
+
+  // 견적 요청 뱃지 표시 함수
+  const getQuoteBadge = (isQuoteRequest: boolean) => {
+    if (!isQuoteRequest) return null
+
+    return (
+      <Badge variant="outline" className="ml-2 border-blue-500 text-blue-500">
+        <FileText className="h-3 w-3 mr-1" />
+        견적 요청
+      </Badge>
+    )
   }
 
   return (
@@ -111,6 +137,7 @@ export default function AdminOrdersPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">모든 상태</SelectItem>
+                  <SelectItem value="견적 요청">견적 요청</SelectItem>
                   <SelectItem value="관리자 승인 대기">관리자 승인 대기</SelectItem>
                   <SelectItem value="결제 대기">결제 대기</SelectItem>
                   <SelectItem value="배송 준비중">배송 준비중</SelectItem>
@@ -147,23 +174,36 @@ export default function AdminOrdersPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredOrders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-medium">{order.id}</TableCell>
-                      <TableCell>{order.orderDate}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">{order.productTitle}</TableCell>
-                      <TableCell>{order.totalAmount.toLocaleString()}원</TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusBadgeVariant(order.status) as any}>{order.status}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => router.push(`/admin/orders/${order.id}`)}>
-                          <Eye className="h-4 w-4" />
-                          <span className="sr-only">상세보기</span>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  filteredOrders.map((order) => {
+                    // 모의 데이터에서 일부 주문을 견적 요청으로 표시 (실제 구현에서는 API에서 받아온 데이터 사용)
+                    const isQuoteRequest = order.id.charCodeAt(0) % 5 === 0
+                    const productCount = (order.id.charCodeAt(0) % 3) + 1
+                    const status = isQuoteRequest ? "견적 요청" : order.status
+
+                    return (
+                      <TableRow key={order.id} className={isQuoteRequest ? "bg-blue-50" : ""}>
+                        <TableCell className="font-medium">{order.id}</TableCell>
+                        <TableCell>{order.orderDate}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">
+                          {order.productTitle}
+                          {getProductCountBadge(productCount)}
+                          {getQuoteBadge(isQuoteRequest)}
+                        </TableCell>
+                        <TableCell>
+                          {isQuoteRequest ? "견적 요청 중" : `${order.totalAmount.toLocaleString()}원`}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusBadgeVariant(status) as any}>{status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" onClick={() => router.push(`/admin/orders/${order.id}`)}>
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">상세보기</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
                 )}
               </TableBody>
             </Table>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import type { ProductData } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Textarea } from "@/components/ui/textarea"
 import { ShoppingCart, Heart, Share2, MessageCircle } from "lucide-react"
 import { LoginModal } from "@/components/auth/login-modal"
 import { ShareModal } from "@/components/share-modal"
@@ -16,9 +17,11 @@ import { useToast } from "@/hooks/use-toast"
 
 interface ProductAnalysisProps {
   product: ProductData
+  multipleProducts?: boolean
+  onUpdateNotes?: (notes: string) => void
 }
 
-export function ProductAnalysis({ product }: ProductAnalysisProps) {
+export function ProductAnalysis({ product, multipleProducts = false, onUpdateNotes }: ProductAnalysisProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const { isAuthenticated } = useAuth()
@@ -87,10 +90,8 @@ export function ProductAnalysis({ product }: ProductAnalysisProps) {
   const productInWishlist = isInWishlist(product.id)
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">상품 분석 결과</h1>
-
-      <Card className="mb-8">
+    <div className="w-full">
+      <Card className="mb-4">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="relative h-64 w-full md:w-1/3 rounded-md overflow-hidden">
@@ -138,34 +139,51 @@ export function ProductAnalysis({ product }: ProductAnalysisProps) {
               </div>
             </div>
           </div>
+
+          {/* 추가 요청사항 입력 필드 */}
+          <div className="mt-4">
+            <label htmlFor={`notes-${product.id}`} className="block text-sm font-medium mb-1">
+              추가 요청사항 (선택)
+            </label>
+            <Textarea
+              id={`notes-${product.id}`}
+              placeholder="색상, 사이즈, 옵션 등 추가 요청사항을 입력해주세요."
+              value={product.additionalNotes || ""}
+              onChange={(e) => onUpdateNotes && onUpdateNotes(e.target.value)}
+              className="resize-none"
+              rows={3}
+            />
+          </div>
         </CardContent>
       </Card>
 
-      <div className="space-y-4">
-        <Button className="w-full py-6 text-lg" size="lg" onClick={handlePurchaseClick}>
-          <ShoppingCart className="mr-2 h-5 w-5" />
-          구매 대행 요청
-        </Button>
+      {!multipleProducts && (
+        <div className="space-y-4">
+          <Button className="w-full py-6 text-lg" size="lg" onClick={handlePurchaseClick}>
+            <ShoppingCart className="mr-2 h-5 w-5" />
+            구매 대행 요청
+          </Button>
 
-        <div className="flex gap-4">
-          <Button
-            variant={productInWishlist ? "default" : "outline"}
-            className={`flex-1 ${productInWishlist ? "bg-pink-600 hover:bg-pink-700" : ""}`}
-            onClick={handleWishlistClick}
-          >
-            <Heart className={`mr-2 h-5 w-5 ${productInWishlist ? "fill-current" : ""}`} />
-            {productInWishlist ? "찜 완료" : "찜하기"}
-          </Button>
-          <Button variant="outline" className="flex-1" onClick={handleShareClick}>
-            <Share2 className="mr-2 h-5 w-5" />
-            공유하기
-          </Button>
-          <Button variant="outline" className="flex-1" onClick={handleInquiryClick}>
-            <MessageCircle className="mr-2 h-5 w-5" />
-            문의하기
-          </Button>
+          <div className="flex gap-4">
+            <Button
+              variant={productInWishlist ? "default" : "outline"}
+              className={`flex-1 ${productInWishlist ? "bg-pink-600 hover:bg-pink-700" : ""}`}
+              onClick={handleWishlistClick}
+            >
+              <Heart className={`mr-2 h-5 w-5 ${productInWishlist ? "fill-current" : ""}`} />
+              {productInWishlist ? "찜 완료" : "찜하기"}
+            </Button>
+            <Button variant="outline" className="flex-1" onClick={handleShareClick}>
+              <Share2 className="mr-2 h-5 w-5" />
+              공유하기
+            </Button>
+            <Button variant="outline" className="flex-1" onClick={handleInquiryClick}>
+              <MessageCircle className="mr-2 h-5 w-5" />
+              문의하기
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       <LoginModal
         isOpen={isLoginModalOpen}

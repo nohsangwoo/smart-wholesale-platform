@@ -70,7 +70,7 @@ export function AdminSidebar() {
     },
     {
       icon: <Package className="h-5 w-5" />,
-      label: "상품 관리",
+      label: "견적 관리",
       href: "/admin/products",
     },
     {

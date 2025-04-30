@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useState } from "react"
 import { Logo } from "@/components/logo"
 import { UserMenu } from "@/components/user-menu"
 import { Button } from "@/components/ui/button"
@@ -8,10 +9,12 @@ import { Heart, Share2, Settings, Store } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 import { useRouter } from "next/navigation"
 import { NotificationMenu } from "@/components/notification-menu"
+import { SignupModal } from "@/components/signup-modal"
 
 export function Header() {
   const { isAuthenticated } = useAuth()
   const router = useRouter()
+  const [signupModalOpen, setSignupModalOpen] = useState(false)
 
   return (
     <header className="border-b">
@@ -28,11 +31,6 @@ export function Header() {
             <Button variant="outline" size="sm" className="gap-2">
               <Store className="h-4 w-4" />
               판매자 페이지
-            </Button>
-          </Link>
-          <Link href="/vendor/register">
-            <Button variant="default" size="sm" className="gap-2">
-              판매자 가입 신청
             </Button>
           </Link>
         </div>
@@ -56,11 +54,9 @@ export function Header() {
             </>
           ) : (
             <>
-              <Link href="/vendor/register">
-                <Button variant="outline" size="sm">
-                  판매자 가입
-                </Button>
-              </Link>
+              <Button variant="outline" size="sm" onClick={() => setSignupModalOpen(true)}>
+                회원가입
+              </Button>
               <Link href="/login" className="text-sm font-medium hover:text-primary transition-colors">
                 로그인
               </Link>
@@ -68,6 +64,7 @@ export function Header() {
           )}
         </div>
       </div>
+      <SignupModal isOpen={signupModalOpen} onClose={() => setSignupModalOpen(false)} />
     </header>
   )
 }

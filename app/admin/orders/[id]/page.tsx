@@ -1,30 +1,67 @@
 "use client"
 
+import { TableCell } from "@/components/ui/table"
+
+import { TableBody } from "@/components/ui/table"
+
+import { TableHead } from "@/components/ui/table"
+
+import { TableRow } from "@/components/ui/table"
+
+import { TableHeader } from "@/components/ui/table"
+
+import { Table } from "@/components/ui/table"
+
 import { Input } from "@/components/ui/input"
 
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import Image from "next/image"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Truck, Package, CheckCircle, Clock, AlertCircle } from "lucide-react"
+import {
+  ArrowLeft,
+  Truck,
+  Package,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  ExternalLink,
+} from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { mockOrderDetails } from "@/lib/mock-data"
-import type { OrderDetail } from "@/lib/types"
+import type { OrderDetail, ProductData } from "@/lib/types"
+
+// 여러 상품을 포함하는 주문 상세 정보 타입 확장
+interface MultiProductOrderDetail extends Omit<OrderDetail, "product"> {
+  products: ProductData[]
+  isQuoteRequest?: boolean
+  vendorQuotes?: {
+    vendorId: string
+    vendorName: string
+    totalAmount: number
+    estimatedDelivery: string
+    status: string
+  }[]
+}
 
 export default function AdminOrderDetailPage() {
   const router = useRouter()
   const params = useParams()
   const { toast } = useToast()
-  const [order, setOrder] = useState<OrderDetail | null>(null)
+  const [order, setOrder] = useState<MultiProductOrderDetail | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [newStatus, setNewStatus] = useState("")
   const [statusNote, setStatusNote] = useState("")
   const [isUpdating, setIsUpdating] = useState(false)
+  const [expandedProducts, setExpandedProducts] = useState<string[]>([])
 
   const orderId = params.id as string
 
@@ -35,8 +72,95 @@ export default function AdminOrderDetailPage() {
         const foundOrder = mockOrderDetails.find((o) => o.id === orderId)
 
         if (foundOrder) {
-          setOrder(foundOrder)
-          setNewStatus(foundOrder.status)
+          // 주문 ID의 첫 글자 코드에 따라 견적 요청 여부 결정 (모의 데이터용)
+          const isQuoteRequest = orderId.charCodeAt(0) % 5 === 0
+
+          // 기존 주문 데이터를 여러 상품을 포함하는 형태로 변환
+          const multiProductOrder: MultiProductOrderDetail = {
+            ...foundOrder,
+            isQuoteRequest,
+            status: isQuoteRequest ? "견적 요청" : foundOrder.status,
+            products: [
+              {
+                id: foundOrder.product.id,
+                title: foundOrder.product.title,
+                platform: foundOrder.product.platform,
+                originalPrice: foundOrder.product.originalPrice,
+                estimatedPrice: foundOrder.product.estimatedPrice,
+                imageUrl: foundOrder.product.imageUrl,
+                fees: foundOrder.product.fees,
+                tax: foundOrder.product.tax,
+                shippingCost: foundOrder.product.shippingCost,
+                originalUrl: foundOrder.product.originalUrl,
+                additionalNotes: "원래 요청했던 색상이 품절이면 유사한 색상으로 대체해주세요.",
+              },
+            ],
+          }
+
+          // 주문 ID의 첫 글자 코드에 따라 추가 상품 생성 (모의 데이터용)
+          if (orderId.charCodeAt(0) % 3 > 0) {
+            multiProductOrder.products.push({
+              id: `product-${Date.now()}-1`,
+              title: "추가 상품 - 휴대폰 보호 케이스",
+              platform: "Taobao",
+              originalPrice: 15000,
+              estimatedPrice: 19500,
+              imageUrl: "/portable-power-bank.png",
+              fees: 1500,
+              tax: 1000,
+              shippingCost: 2000,
+              additionalNotes: "투명 케이스로 부탁드립니다.",
+            })
+          }
+
+          if (orderId.charCodeAt(0) % 3 > 1) {
+            multiProductOrder.products.push({
+              id: `product-${Date.now()}-2`,
+              title: "추가 상품 - 무선 충전기",
+              platform: "Alibaba",
+              originalPrice: 25000,
+              estimatedPrice: 32500,
+              imageUrl: "/wireless-charger.png",
+              fees: 2500,
+              tax: 2000,
+              shippingCost: 3000,
+            })
+          }
+
+          // 견적 요청인 경우 판매자 견적 정보 추가
+          if (isQuoteRequest) {
+            multiProductOrder.vendorQuotes = [
+              {
+                vendorId: "vendor-1",
+                vendorName: "키키퍼 로지스틱스",
+                totalAmount: 120000,
+                estimatedDelivery: "3-5일",
+                status: "견적 제출",
+              },
+              {
+                vendorId: "vendor-2",
+                vendorName: "글로벌 트레이딩",
+                totalAmount: 135000,
+                estimatedDelivery: "2-4일",
+                status: "견적 제출",
+              },
+              {
+                vendorId: "vendor-3",
+                vendorName: "스마트 임포트",
+                totalAmount: 118000,
+                estimatedDelivery: "4-7일",
+                status: "검토 중",
+              },
+            ]
+          }
+
+          setOrder(multiProductOrder)
+          setNewStatus(multiProductOrder.status)
+
+          // 기본적으로 첫 번째 상품은 펼쳐서 보여줌
+          if (multiProductOrder.products.length > 0) {
+            setExpandedProducts([multiProductOrder.products[0].id])
+          }
         } else {
           toast({
             title: "오류 발생",
@@ -72,6 +196,8 @@ export default function AdminOrderDetailPage() {
         return <Clock className="h-5 w-5" />
       case "주문 취소":
         return <AlertCircle className="h-5 w-5" />
+      case "견적 요청":
+        return <FileText className="h-5 w-5" />
       default:
         return <Package className="h-5 w-5" />
     }
@@ -91,6 +217,8 @@ export default function AdminOrderDetailPage() {
         return "outline"
       case "주문 취소":
         return "destructive"
+      case "견적 요청":
+        return "secondary"
       default:
         return "outline"
     }
@@ -137,6 +265,17 @@ export default function AdminOrderDetailPage() {
     } finally {
       setIsUpdating(false)
     }
+  }
+
+  const toggleProductExpand = (productId: string) => {
+    setExpandedProducts((prev) =>
+      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId],
+    )
+  }
+
+  const calculateTotalAmount = () => {
+    if (!order || !order.products) return 0
+    return order.products.reduce((sum, product) => sum + product.estimatedPrice, 0)
   }
 
   if (isLoading) {
@@ -204,92 +343,188 @@ export default function AdminOrderDetailPage() {
         </Badge>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+      {order.isQuoteRequest && (
+        <Card className="border-blue-200 bg-blue-50">
           <CardHeader>
-            <CardTitle>상품 정보</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <div className="relative h-24 w-24 rounded-md overflow-hidden flex-shrink-0">
-                <Image
-                  src={order.product.imageUrl || "/placeholder.svg"}
-                  alt={order.product.title}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div className="flex-grow">
-                <h3 className="font-medium">{order.product.title}</h3>
-                <p className="text-sm text-muted-foreground">출처: {order.product.platform}</p>
-                <p className="text-primary font-semibold mt-1">{order.totalAmount.toLocaleString()}원</p>
-              </div>
-            </div>
-
-            <Separator className="my-4" />
-
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>상품 가격</span>
-                <span>{order.product.originalPrice.toLocaleString()}원</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>수수료</span>
-                <span>{order.product.fees.toLocaleString()}원</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>관세</span>
-                <span>{order.product.tax.toLocaleString()}원</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>배송비</span>
-                <span>{order.product.shippingCost.toLocaleString()}원</span>
-              </div>
-              <Separator className="my-2" />
-              <div className="flex justify-between font-medium">
-                <span>총 결제 금액</span>
-                <span>{order.totalAmount.toLocaleString()}원</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>배송지 정보</CardTitle>
+            <CardTitle className="flex items-center text-blue-700">
+              <FileText className="h-5 w-5 mr-2" />
+              견적 요청 정보
+            </CardTitle>
+            <CardDescription>
+              이 주문은 여러 상품에 대한 견적 요청입니다. 총 {order.products.length}개의 상품에 대한 견적이
+              요청되었습니다.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">수령인</p>
-                  <p className="font-medium">{order.shipping.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">연락처</p>
-                  <p className="font-medium">{order.shipping.phone}</p>
-                </div>
-              </div>
               <div>
-                <p className="text-sm text-muted-foreground">이메일</p>
-                <p className="font-medium">{order.shipping.email}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">주소</p>
-                <p className="font-medium">
-                  ({order.shipping.zipCode}) {order.shipping.address} {order.shipping.detailAddress}
-                </p>
-              </div>
-              {order.shipping.requestNote && (
-                <div>
-                  <p className="text-sm text-muted-foreground">요청사항</p>
-                  <p>{order.shipping.requestNote}</p>
+                <h3 className="text-sm font-medium mb-2">판매자 견적 현황</h3>
+                <div className="rounded-md border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>판매자</TableHead>
+                        <TableHead>견적 금액</TableHead>
+                        <TableHead>예상 배송일</TableHead>
+                        <TableHead>상태</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {order.vendorQuotes?.map((quote) => (
+                        <TableRow key={quote.vendorId}>
+                          <TableCell className="font-medium">{quote.vendorName}</TableCell>
+                          <TableCell>{quote.totalAmount.toLocaleString()}원</TableCell>
+                          <TableCell>{quote.estimatedDelivery}</TableCell>
+                          <TableCell>
+                            <Badge variant={quote.status === "견적 제출" ? "success" : "secondary"}>
+                              {quote.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
-              )}
+              </div>
             </div>
           </CardContent>
         </Card>
-      </div>
+      )}
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>상품 정보 ({order.products.length}개)</CardTitle>
+          <div className="text-lg font-semibold">
+            {order.isQuoteRequest ? "견적 요청 중" : `총 결제 금액: ${calculateTotalAmount().toLocaleString()}원`}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {order.products.map((product, index) => (
+              <div key={product.id} className="border rounded-md overflow-hidden">
+                <div
+                  className="flex items-center justify-between p-4 cursor-pointer bg-muted/30"
+                  onClick={() => toggleProductExpand(product.id)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="relative h-16 w-16 rounded-md overflow-hidden flex-shrink-0">
+                      <Image
+                        src={product.imageUrl || "/placeholder.svg"}
+                        alt={product.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">{product.title}</h3>
+                      <p className="text-sm text-muted-foreground">출처: {product.platform}</p>
+                      <p className="text-primary font-semibold mt-1">
+                        {order.isQuoteRequest ? "견적 요청 중" : `${product.estimatedPrice.toLocaleString()}원`}
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon">
+                    {expandedProducts.includes(product.id) ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+
+                {expandedProducts.includes(product.id) && (
+                  <div className="p-4 border-t">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>상품 가격</span>
+                          <span>{product.originalPrice.toLocaleString()}원</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>수수료</span>
+                          <span>{product.fees.toLocaleString()}원</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>관세</span>
+                          <span>{product.tax.toLocaleString()}원</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>배송비</span>
+                          <span>{product.shippingCost.toLocaleString()}원</span>
+                        </div>
+                        <Separator className="my-2" />
+                        <div className="flex justify-between font-medium">
+                          <span>상품 총액</span>
+                          <span>
+                            {order.isQuoteRequest ? "견적 요청 중" : `${product.estimatedPrice.toLocaleString()}원`}
+                          </span>
+                        </div>
+                      </div>
+
+                      {product.additionalNotes && (
+                        <div className="mt-4">
+                          <h4 className="text-sm font-medium mb-2">구매자 추가 요청사항</h4>
+                          <div className="p-3 bg-muted rounded-md text-sm">{product.additionalNotes}</div>
+                        </div>
+                      )}
+
+                      {product.originalUrl && (
+                        <div className="mt-2">
+                          <a
+                            href={product.originalUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:underline flex items-center"
+                          >
+                            원본 상품 링크 보기
+                            <ExternalLink className="h-3 w-3 ml-1" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>배송지 정보</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">수령인</p>
+                <p className="font-medium">{order.shipping.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">연락처</p>
+                <p className="font-medium">{order.shipping.phone}</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">이메일</p>
+              <p className="font-medium">{order.shipping.email}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">주소</p>
+              <p className="font-medium">
+                ({order.shipping.zipCode}) {order.shipping.address} {order.shipping.detailAddress}
+              </p>
+            </div>
+            {order.shipping.requestNote && (
+              <div>
+                <p className="text-sm text-muted-foreground">요청사항</p>
+                <p>{order.shipping.requestNote}</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -324,6 +559,7 @@ export default function AdminOrderDetailPage() {
                     <SelectValue placeholder="상태 선택" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="견적 요청">견적 요청</SelectItem>
                     <SelectItem value="관리자 승인 대기">관리자 승인 대기</SelectItem>
                     <SelectItem value="결제 대기">결제 대기</SelectItem>
                     <SelectItem value="배송 준비중">배송 준비중</SelectItem>

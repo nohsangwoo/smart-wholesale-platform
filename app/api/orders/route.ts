@@ -1,38 +1,50 @@
 import { NextResponse } from "next/server"
-import { mockOrders } from "@/lib/mock-data"
-
-export async function GET() {
-  // 지연 시뮬레이션 (500ms)
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  return NextResponse.json({
-    success: true,
-    orders: mockOrders,
-  })
-}
+import { mockOrderDetails } from "@/lib/mock-data"
+import type { ProductData } from "@/lib/types"
 
 export async function POST(request: Request) {
-  const orderData = await request.json()
+  try {
+    const body = await request.json()
+    const { products, shippingInfo } = body
 
-  // 지연 시뮬레이션 (1초)
-  await new Promise((resolve) => setTimeout(resolve, 1000))
+    if (!products || !Array.isArray(products) || products.length === 0) {
+      return NextResponse.json({ message: "상품 정보가 없습니다." }, { status: 400 })
+    }
 
-  // 유효한 주문 ID 목록 (모킹 데이터에 있는 ID들)
-  const validOrderIds = ["order-1", "order-2", "order-3", "order-4", "order-5", "order-6", "order-7", "order-8"]
+    // 주문 ID 생성
+    const orderId = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`
 
-  // 새 주문 생성 (모킹)
-  // 실제 환경에서는 고유한 ID를 생성하지만, 테스트를 위해 기존 유효한 ID 중 하나를 사용
-  const newOrder = {
-    id: validOrderIds[0], // 테스트를 위해 항상 유효한 ID 사용
-    status: "관리자 승인 대기",
-    orderDate: new Date().toISOString().split("T")[0],
-    ...orderData,
+    // 총 금액 계산
+    const totalAmount = products.reduce((sum: number, product: ProductData) => sum + product.estimatedPrice, 0)
+
+    // 모의 주문 데이터 생성
+    const orderData = {
+      id: orderId,
+      userId: "user-123", // 실제로는 인증된 사용자 ID
+      status: "pending",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      products,
+      totalAmount,
+      shippingAddress: `${shippingInfo.zipCode} ${shippingInfo.address} ${shippingInfo.detailAddress}`,
+      shippingInfo,
+    }
+
+    // 실제로는 DB에 저장
+    console.log("Order created:", orderData)
+
+    // 모의 데이터에 추가 (실제 구현에서는 필요 없음)
+    mockOrderDetails.push({
+      ...orderData,
+      product: products[0], // 이전 형식과의 호환성을 위해
+    })
+
+    return NextResponse.json({
+      message: "주문이 성공적으로 접수되었습니다.",
+      orderId,
+    })
+  } catch (error) {
+    console.error("Order creation error:", error)
+    return NextResponse.json({ message: "주문 처리 중 오류가 발생했습니다." }, { status: 500 })
   }
-
-  console.log("Created new order:", newOrder.id)
-
-  return NextResponse.json({
-    success: true,
-    order: newOrder,
-  })
 }

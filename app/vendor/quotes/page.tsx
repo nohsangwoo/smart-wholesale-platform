@@ -39,53 +39,120 @@ export default function VendorQuotesPage() {
   const quotes = [
     {
       id: "Q-2023-001",
-      productName: "스마트폰 케이스 (iPhone 14 Pro)",
-      quantity: 500,
+      products: [
+        {
+          productName: "스마트폰 케이스 (iPhone 14 Pro)",
+          quantity: 500,
+        },
+      ],
       status: "pending",
       requestDate: "2023-06-15",
       expiryDate: "2023-06-22",
       customerName: "김철수",
       price: 4500000,
+      isMultiProduct: false,
     },
     {
       id: "Q-2023-002",
-      productName: "블루투스 이어폰",
-      quantity: 200,
+      products: [
+        {
+          productName: "블루투스 이어폰",
+          quantity: 200,
+        },
+      ],
       status: "accepted",
       requestDate: "2023-06-10",
       expiryDate: "2023-06-17",
       customerName: "이영희",
       price: 6000000,
+      isMultiProduct: false,
     },
     {
       id: "Q-2023-003",
-      productName: "보조배터리 10000mAh",
-      quantity: 300,
+      products: [
+        {
+          productName: "보조배터리 10000mAh",
+          quantity: 300,
+        },
+      ],
       status: "rejected",
       requestDate: "2023-06-05",
       expiryDate: "2023-06-12",
       customerName: "박지민",
       price: 3750000,
+      isMultiProduct: false,
     },
     {
       id: "Q-2023-004",
-      productName: "노트북 파우치 15인치",
-      quantity: 150,
+      products: [
+        {
+          productName: "노트북 파우치 15인치",
+          quantity: 150,
+        },
+      ],
       status: "expired",
       requestDate: "2023-05-28",
       expiryDate: "2023-06-04",
       customerName: "최수진",
       price: 2250000,
+      isMultiProduct: false,
     },
     {
       id: "Q-2023-005",
-      productName: "무선 충전기",
-      quantity: 400,
+      products: [
+        {
+          productName: "무선 충전기",
+          quantity: 400,
+        },
+      ],
       status: "pending",
       requestDate: "2023-06-14",
       expiryDate: "2023-06-21",
       customerName: "정민수",
       price: 5200000,
+      isMultiProduct: false,
+    },
+    {
+      id: "Q-2023-006",
+      products: [
+        {
+          productName: "스마트폰 케이스 (갤럭시 S23)",
+          quantity: 300,
+        },
+        {
+          productName: "강화유리 보호필름",
+          quantity: 500,
+        },
+        {
+          productName: "휴대폰 그립톡",
+          quantity: 200,
+        },
+      ],
+      status: "pending",
+      requestDate: "2023-06-18",
+      expiryDate: "2023-06-25",
+      customerName: "김다중",
+      price: 8500000,
+      isMultiProduct: true,
+    },
+    {
+      id: "Q-2023-007",
+      products: [
+        {
+          productName: "블루투스 스피커",
+          quantity: 100,
+        },
+        {
+          productName: "무선 이어폰",
+          quantity: 150,
+        },
+      ],
+      status: "pending",
+      requestDate: "2023-06-17",
+      expiryDate: "2023-06-24",
+      customerName: "이복수",
+      price: 7200000,
+      isMultiProduct: true,
     },
   ]
 
@@ -209,14 +276,34 @@ export default function VendorQuotesPage() {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {quotes.map((quote) => (
-                          <tr key={quote.id} className="hover:bg-gray-50">
+                          <tr key={quote.id} className={`hover:bg-gray-50 ${quote.isMultiProduct ? "bg-blue-50" : ""}`}>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                               {quote.id}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td className="px-6 py-4 text-sm text-gray-500">
                               <div>
-                                <p className="font-medium">{quote.productName}</p>
-                                <p className="text-xs text-gray-500">수량: {quote.quantity}개</p>
+                                {quote.isMultiProduct ? (
+                                  <>
+                                    <div className="flex items-center mb-1">
+                                      <Badge variant="outline" className="bg-blue-100 text-blue-800 mr-2">
+                                        다중 상품
+                                      </Badge>
+                                      <p className="font-medium">{quote.products.length}개 상품</p>
+                                    </div>
+                                    <div className="max-h-20 overflow-y-auto text-xs space-y-1">
+                                      {quote.products.map((product, idx) => (
+                                        <p key={idx} className="text-gray-600">
+                                          • {product.productName} ({product.quantity}개)
+                                        </p>
+                                      ))}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <p className="font-medium">{quote.products[0].productName}</p>
+                                    <p className="text-xs text-gray-500">수량: {quote.products[0].quantity}개</p>
+                                  </>
+                                )}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{quote.customerName}</td>
@@ -306,14 +393,37 @@ export default function VendorQuotesPage() {
                         {quotes
                           .filter((q) => q.status === "pending")
                           .map((quote) => (
-                            <tr key={quote.id} className="hover:bg-gray-50">
+                            <tr
+                              key={quote.id}
+                              className={`hover:bg-gray-50 ${quote.isMultiProduct ? "bg-blue-50" : ""}`}
+                            >
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {quote.id}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td className="px-6 py-4 text-sm text-gray-500">
                                 <div>
-                                  <p className="font-medium">{quote.productName}</p>
-                                  <p className="text-xs text-gray-500">수량: {quote.quantity}개</p>
+                                  {quote.isMultiProduct ? (
+                                    <>
+                                      <div className="flex items-center mb-1">
+                                        <Badge variant="outline" className="bg-blue-100 text-blue-800 mr-2">
+                                          다중 상품
+                                        </Badge>
+                                        <p className="font-medium">{quote.products.length}개 상품</p>
+                                      </div>
+                                      <div className="max-h-20 overflow-y-auto text-xs space-y-1">
+                                        {quote.products.map((product, idx) => (
+                                          <p key={idx} className="text-gray-600">
+                                            • {product.productName} ({product.quantity}개)
+                                          </p>
+                                        ))}
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <p className="font-medium">{quote.products[0].productName}</p>
+                                      <p className="text-xs text-gray-500">수량: {quote.products[0].quantity}개</p>
+                                    </>
+                                  )}
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
