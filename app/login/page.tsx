@@ -2,10 +2,10 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/context/auth-context"
@@ -15,12 +15,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState("test@test.com")
   const [password, setPassword] = useState("test12!")
   const [isLoading, setIsLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, isAuthenticated } = useAuth()
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { toast } = useToast()
-
+  const searchParams = useSearchParams()
   const redirectUrl = searchParams.get("redirect") || "/"
+
+  // 이미 로그인되어 있으면 리다이렉트
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push(redirectUrl)
+    }
+  }, [isAuthenticated, router, redirectUrl])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,12 +63,12 @@ export default function LoginPage() {
     <div className="container mx-auto py-12 px-4">
       <div className="max-w-md mx-auto">
         <Card>
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">로그인</CardTitle>
-            <CardDescription>계정에 로그인하여 서비스를 이용하세요.</CardDescription>
+          <CardHeader>
+            <CardTitle>로그인</CardTitle>
+            <CardDescription>계정에 로그인하여 구매 대행 서비스를 이용하세요.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">이메일</Label>
                 <Input
@@ -86,11 +92,13 @@ export default function LoginPage() {
                 />
               </div>
               <div className="text-xs text-muted-foreground">테스트 계정: test@test.com / test12!</div>
+            </CardContent>
+            <CardFooter>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "로그인 중..." : "로그인"}
               </Button>
-            </form>
-          </CardContent>
+            </CardFooter>
+          </form>
         </Card>
       </div>
     </div>

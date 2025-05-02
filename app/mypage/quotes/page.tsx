@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   Calendar,
   Clock,
@@ -385,17 +385,42 @@ const sortVendorQuotes = (quotes) => {
 export default function QuotesPage() {
   const { user, isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState("all")
   const [sortBy, setSortBy] = useState("date")
   const [openQuoteId, setOpenQuoteId] = useState<string | null>(null)
   const [isChatModalOpen, setIsChatModalOpen] = useState(false)
   const [selectedVendor, setSelectedVendor] = useState<any>(null)
+  const [initialLoad, setInitialLoad] = useState(true)
+
+  // URL에서 openQuoteId 파라미터 가져오기
+  const urlOpenQuoteId = searchParams.get("openQuoteId")
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push("/")
     }
   }, [isAuthenticated, isLoading, router])
+
+  // URL에서 openQuoteId 파라미터가 있으면 해당 견적 모달 열기
+  useEffect(() => {
+    if (initialLoad && urlOpenQuoteId && !isLoading && isAuthenticated) {
+      // 해당 ID를 가진 견적이 있는지 확인
+      const quoteExists = mockQuoteRequests.some((quote) => quote.id === urlOpenQuoteId)
+
+      if (quoteExists) {
+        setOpenQuoteId(urlOpenQuoteId)
+
+        // URL에서 파라미터 제거 (히스토리에 남지 않도록)
+        const newUrl = new URL(window.location.href)
+        newUrl.searchParams.delete("openQuoteId")
+        window.history.replaceState({}, "", newUrl.toString())
+
+        // 초기 로드 완료 표시
+        setInitialLoad(false)
+      }
+    }
+  }, [urlOpenQuoteId, initialLoad, isLoading, isAuthenticated])
 
   // 견적 요청 필터링
   const filteredQuotes = mockQuoteRequests.filter((quote) => {
