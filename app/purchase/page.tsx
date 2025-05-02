@@ -118,6 +118,17 @@ export default function PurchasePage() {
     setTotalPrice(sum)
   }, [products])
 
+  // 로그인 상태 확인
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      // 로그인되어 있지 않으면 로그인 페이지로 리다이렉트
+      router.push(
+        "/login?redirect=/purchase" +
+          (searchParams.get("productId") ? `?productId=${searchParams.get("productId")}` : ""),
+      )
+    }
+  }, [isLoading, isAuthenticated, router, searchParams])
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
@@ -203,7 +214,8 @@ export default function PurchasePage() {
     }
   }
 
-  if (isLoading) {
+  // 로딩 중이거나 로그인되어 있지 않으면 로딩 표시
+  if (isLoading || !isAuthenticated) {
     return (
       <div className="container mx-auto py-12 px-4">
         <div className="max-w-3xl mx-auto text-center">
